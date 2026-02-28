@@ -236,6 +236,7 @@ import {
   TooltipAnnounce,
   TooltipApp,
   TooltipBase,
+  EntrypointSelector,
   UserAvatar,
   VersionSelector,
   ViewModeToggle,
@@ -3221,6 +3222,34 @@ describe('component accessibility audits', () => {
     it('should have no accessibility violations when checked', async () => {
       const component = await mountSuspended(SettingsToggle, {
         props: { label: 'Enable feature', modelValue: true },
+      })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+  })
+
+  describe('EntrypointSelector', () => {
+    it('should have no accessibility violations with a single entrypoint (read-only)', async () => {
+      const component = await mountSuspended(EntrypointSelector, {
+        props: {
+          packageName: 'vue',
+          version: '3.5.0',
+          currentEntrypoint: '.',
+          entrypoints: ['.'],
+        },
+      })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations with multiple entrypoints (closed)', async () => {
+      const component = await mountSuspended(EntrypointSelector, {
+        props: {
+          packageName: '@nuxt/kit',
+          version: '4.3.1',
+          currentEntrypoint: '.',
+          entrypoints: ['.', 'compatibility', 'loader'],
+        },
       })
       const results = await runAxe(component)
       expect(results.violations).toEqual([])

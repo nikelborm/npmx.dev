@@ -17,6 +17,7 @@ const GROUP_ORDER: CommandPaletteGroup[] = [
   'settings',
   'help',
   'npmx',
+  'entrypoints',
   'versions',
 ]
 
@@ -68,6 +69,10 @@ export function useCommandPaletteCommands() {
         return packageName
           ? t('command_palette.groups.versions_with_name', { name: packageName })
           : t('command_palette.groups.versions')
+      case 'entrypoints':
+        return packageName
+          ? t('command_palette.groups.entrypoints_with_name', { name: packageName })
+          : t('command_palette.groups.entrypoints')
     }
   }
 

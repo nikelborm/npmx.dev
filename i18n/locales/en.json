@@ -113,7 +113,9 @@
       "package": "Package",
       "package_with_name": "Package ({name})",
       "versions": "Versions",
-      "versions_with_name": "Versions of {name}"
+      "versions_with_name": "Versions of {name}",
+      "entrypoints": "Entrypoints",
+      "entrypoints_with_name": "Entrypoints of {name}"
     },
     "actions": {
       "search": "Search",
@@ -167,6 +169,9 @@
     },
     "version": {
       "label": "{version}"
+    },
+    "entrypoint": {
+      "label": "{entrypoint}"
     },
     "status": {
       "available_in_context": "{context}. No commands available | {context}. 1 command available | {context}. {count} commands available",
@@ -462,7 +467,9 @@
       "page_title_name": "{name} docs - npmx",
       "page_title_version": "{name} docs - npmx",
       "og_title": "{name} - Docs",
-      "view_package": "View package"
+      "view_package": "View package",
+      "select_entrypoint": "Select entrypoint",
+      "entrypoints": "Package entrypoints"
     },
     "get_started": {
       "title": "Get started",

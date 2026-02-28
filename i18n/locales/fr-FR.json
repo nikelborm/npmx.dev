@@ -110,7 +110,9 @@
       "package": "Paquet",
       "package_with_name": "Paquet ({name})",
       "versions": "Versions",
-      "versions_with_name": "Versions de {name}"
+      "versions_with_name": "Versions de {name}",
+      "entrypoints": "Points d'entrée",
+      "entrypoints_with_name": "Points d'entrée de {name}"
     },
     "actions": {
       "search": "Recherche",
@@ -164,6 +166,9 @@
     },
     "version": {
       "label": "{version}"
+    },
+    "entrypoint": {
+      "label": "{entrypoint}"
     },
     "status": {
       "available_in_context": "{context}. Aucune commande disponible | {context}. 1 commande disponible | {context}. {count} commandes disponibles",
@@ -450,7 +455,9 @@
       "page_title_name": "Documentation {name} - npmx",
       "page_title_version": "Documentation {name} - npmx",
       "og_title": "{name} - Documentation",
-      "view_package": "Voir le paquet"
+      "view_package": "Voir le paquet",
+      "select_entrypoint": "Sélectionner le point d'entrée",
+      "entrypoints": "Points d'entrée du paquet"
     },
     "get_started": {
       "title": "Commencer",

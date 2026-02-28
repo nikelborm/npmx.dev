@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { setResponseHeader } from 'h3'
+import { parsePackageParam } from '#shared/utils/parse-package-param'
 
 definePageMeta({
   name: 'docs',
@@ -13,24 +14,19 @@ const router = useRouter()
 const { t } = useI18n()
 
 const parsedRoute = computed(() => {
-  const segments = route.params.path?.filter(Boolean)
-  const vIndex = segments.indexOf('v')
-
-  if (vIndex === -1 || vIndex >= segments.length - 1) {
-    return {
-      packageName: segments.join('/'),
-      version: null as string | null,
-    }
-  }
+  const rawPath = route.params.path?.filter(Boolean).join('/') ?? ''
+  const { packageName, version, rest } = parsePackageParam(rawPath)
 
   return {
-    packageName: segments.slice(0, vIndex).join('/'),
-    version: segments.slice(vIndex + 1).join('/'),
+    packageName,
+    version: version ?? null,
+    entrypoint: rest.length > 0 ? rest.join('/') : null,
   }
 })
 
 const packageName = computed(() => parsedRoute.value.packageName)
 const requestedVersion = computed(() => parsedRoute.value.version)
+const entrypoint = computed(() => parsedRoute.value.entrypoint)
 
 // Validate package name on server-side for early error detection
 if (import.meta.server && packageName.value) {
@@ -48,12 +44,8 @@ if (import.meta.server && !requestedVersion.value && packageName.value) {
   const version = await fetchLatestVersion(packageName.value)
   if (version) {
     setResponseHeader(useRequestEvent()!, 'Cache-Control', 'no-cache')
-    const pathSegments = [...packageName.value.split('/'), 'v', version]
     app.runWithContext(() =>
-      navigateTo(
-        { name: 'docs', params: { path: pathSegments as [string, ...string[]] } },
-        { redirectCode: 302 },
-      ),
+      navigateTo(docsRoute(packageName.value, version), { redirectCode: 302 }),
     )
   }
 }
@@ -62,8 +54,7 @@ watch(
   [requestedVersion, latestVersion, packageName],
   ([version, latest, name]) => {
     if (!version && latest && name) {
-      const pathSegments = [...name.split('/'), 'v', latest]
-      router.replace({ name: 'docs', params: { path: pathSegments as [string, ...string[]] } })
+      router.replace(docsRoute(name, latest))
     }
   },
   { immediate: true },
@@ -90,7 +81,8 @@ useCommandPalettePackageCommands(commandPalettePackageContext)
 
 const docsUrl = computed(() => {
   if (!packageName.value || !resolvedVersion.value) return null
-  return `/api/registry/docs/${packageName.value}/v/${resolvedVersion.value}`
+  const base = `/api/registry/docs/${packageName.value}/v/${resolvedVersion.value}`
+  return entrypoint.value ? `${base}/${entrypoint.value}` : base
 })
 
 const shouldFetch = computed(() => !!docsUrl.value)
@@ -119,9 +111,10 @@ const latestVersionDetailed = computed(() => {
   return pkg.value.versions[latestTag] ?? null
 })
 
-const versionUrlPattern = computed(
-  () => `/package-docs/${pkg.value?.name || packageName.value}/v/{version}`,
-)
+const versionUrlPattern = computed(() => {
+  const base = `/package-docs/${pkg.value?.name || packageName.value}/v/{version}`
+  return entrypoint.value && entrypoint.value !== '.' ? `${base}/${entrypoint.value}` : base
+})
 
 useCommandPaletteVersionCommands(commandPalettePackageContext, versionUrlPattern)
 
@@ -171,6 +164,39 @@ const stickyStyle = computed(() => {
     '--combined-header-height': `${56 + (packageHeaderHeight.value || 44)}px`,
   }
 })
+
+// Multi-entrypoint support
+const entrypoints = computed(() => docsData.value?.entrypoints ?? null)
+const hasRootEntrypoint = computed(() => entrypoints.value?.includes('.') ?? false)
+const currentEntrypoint = computed(
+  () => docsData.value?.entrypoint ?? entrypoint.value ?? (hasRootEntrypoint.value ? '.' : ''),
+)
+
+// Redirect to first entrypoint for multi-entrypoint packages
+watch(docsData, data => {
+  if (
+    data?.entrypoints?.length &&
+    !data.entrypoints.includes('.') &&
+    !entrypoint.value &&
+    resolvedVersion.value
+  ) {
+    const firstEntrypoint = data.entrypoints[0]!
+    router.replace(docsRoute(packageName.value, resolvedVersion.value, firstEntrypoint))
+  }
+})
+
+useCommandPaletteEntrypointCommands(
+  computed(() => {
+    const packageContext = commandPalettePackageContext.value
+    const allEntrypoints = entrypoints.value
+    if (!packageContext || !allEntrypoints?.length || allEntrypoints.length < 2) return null
+    return {
+      packageContext,
+      entrypoints: allEntrypoints,
+      currentEntrypoint: currentEntrypoint.value || null,
+    }
+  }),
+)
 </script>
 
 <template>
@@ -183,6 +209,19 @@ const stickyStyle = computed(() => {
       :version-url-pattern="versionUrlPattern"
       page="docs"
     />
+
+    <nav
+      v-if="entrypoints?.length && currentEntrypoint && resolvedVersion"
+      :aria-label="$t('package.docs.entrypoints')"
+      class="container py-2 border-b border-border"
+    >
+      <EntrypointSelector
+        :package-name="packageName"
+        :version="resolvedVersion"
+        :current-entrypoint="currentEntrypoint"
+        :entrypoints="entrypoints"
+      />
+    </nav>
 
     <div class="flex" dir="ltr">
       <!-- Sidebar TOC -->

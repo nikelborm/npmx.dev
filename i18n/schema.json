@@ -345,6 +345,12 @@
             },
             "versions_with_name": {
               "type": "string"
+            },
+            "entrypoints": {
+              "type": "string"
+            },
+            "entrypoints_with_name": {
+              "type": "string"
             }
           },
           "additionalProperties": false
@@ -500,6 +506,15 @@
           "additionalProperties": false
         },
         "version": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "entrypoint": {
           "type": "object",
           "properties": {
             "label": {
@@ -1391,6 +1406,12 @@
               "type": "string"
             },
             "view_package": {
+              "type": "string"
+            },
+            "select_entrypoint": {
+              "type": "string"
+            },
+            "entrypoints": {
               "type": "string"
             }
           },

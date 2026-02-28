@@ -10,6 +10,8 @@
 import { doc, type DocNode } from '@deno/doc'
 import type { DenoDocNode, DenoDocResult } from '#shared/types/deno-doc'
 import { isBuiltin } from 'node:module'
+import { NPM_REGISTRY } from '#shared/utils/constants'
+import { encodePackageName } from '#shared/utils/npm'
 
 // =============================================================================
 // Configuration
@@ -18,6 +20,34 @@ import { isBuiltin } from 'node:module'
 /** Timeout for fetching modules in milliseconds */
 const FETCH_TIMEOUT_MS = 30 * 1000
 
+/** Maximum number of subpath exports to process */
+const MAX_SUBPATH_EXPORTS = 20
+
+/**
+ * Minimal fetch contract used by the docs pipeline. The docs module casts the
+ * response at use sites since responses come from external sources (npm registry,
+ * esm.sh) and have to be runtime-validated anyway.
+ *
+ * Kept non-generic on purpose: making this `<T>` triggers TS2321 "Excessive stack
+ * depth" when TypeScript checks assignability of any function involving `$fetch`
+ * (which carries a heavy route-map generic) against this type.
+ */
+export type DocsFetch = (url: string, options?: { timeout?: number }) => Promise<unknown>
+
+function hasTypesCondition(value: unknown): boolean {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  if (Array.isArray(value)) {
+    return value.some(item => hasTypesCondition(item))
+  }
+
+  return Object.entries(value).some(
+    ([key, nestedValue]) => key === 'types' || hasTypesCondition(nestedValue),
+  )
+}
+
 // =============================================================================
 // Main Export
 // =============================================================================
@@ -25,18 +55,28 @@ const FETCH_TIMEOUT_MS = 30 * 1000
 /**
  * Get documentation nodes for a package using @deno/doc WASM.
  */
-export async function getDocNodes(packageName: string, version: string): Promise<DenoDocResult> {
-  // Get types URL from esm.sh header
-  const typesUrl = await getTypesUrl(packageName, version)
+export async function getDocNodes(
+  packageName: string,
+  version: string,
+  registryFetch: DocsFetch,
+): Promise<DenoDocResult> {
+  // Get types URL from esm.sh header for the root entry
+  const typesUrls = await getTypesUrls(packageName, version, registryFetch)
+  return runDoc(typesUrls)
+}
 
-  if (!typesUrl) {
+/**
+ * Run @deno/doc on a list of types URLs and collect all resulting nodes.
+ */
+async function runDoc(typesUrls: string[]): Promise<DenoDocResult> {
+  if (typesUrls.length === 0) {
     return { version: 1, nodes: [] }
   }
 
   // Generate docs using @deno/doc WASM
   let result: Record<string, DocNode[]>
   try {
-    result = await doc([typesUrl], {
+    result = await doc(typesUrls, {
       load: createLoader(),
       resolve: createResolver(),
     })
@@ -154,14 +194,61 @@ function createResolver(): (specifier: string, referrer: string) => string {
 }
 
 /**
+ * Get TypeScript types URLs for a package, trying the root entry first,
+ * then falling back to subpath exports if the package has no default export.
+ */
+async function getTypesUrls(
+  packageName: string,
+  version: string,
+  registryFetch: DocsFetch,
+): Promise<string[]> {
+  // Try root entry first
+  const rootTypesUrl = await getTypesUrlForSubpath(packageName, version)
+  if (rootTypesUrl) {
+    return [rootTypesUrl]
+  }
+
+  // Root has no types — check subpath exports from the npm registry
+  const subpaths = await getSubpathExports(packageName, version, registryFetch)
+  if (subpaths.length === 0) {
+    return []
+  }
+
+  // Fetch types URLs for each subpath export in parallel
+  const results = await Promise.all(
+    subpaths.map(subpath => getTypesUrlForSubpath(packageName, version, subpath)),
+  )
+
+  return results.filter((url): url is string => url !== null)
+}
+
+/**
+ * Get documentation nodes for a specific subpath export of a package.
+ */
+export async function getDocNodesForEntrypoint(
+  packageName: string,
+  version: string,
+  entrypoint: string,
+): Promise<DenoDocResult> {
+  const typesUrl = await getTypesUrlForSubpath(packageName, version, entrypoint)
+  return runDoc(typesUrl ? [typesUrl] : [])
+}
+
+/**
  * Get the TypeScript types URL from esm.sh's x-typescript-types header.
  *
  * esm.sh serves types URL in the `x-typescript-types` header, not at the main URL.
  * Example: curl -sI 'https://esm.sh/ufo@1.5.0' returns header:
  *   x-typescript-types: https://esm.sh/ufo@1.5.0/dist/index.d.ts
  */
-async function getTypesUrl(packageName: string, version: string): Promise<string | null> {
-  const url = `https://esm.sh/${packageName}@${version}`
+export async function getTypesUrlForSubpath(
+  packageName: string,
+  version: string,
+  subpath?: string,
+): Promise<string | null> {
+  const url = subpath
+    ? `https://esm.sh/${packageName}@${version}/${subpath}`
+    : `https://esm.sh/${packageName}@${version}`
 
   try {
     const response = await $fetch.raw(url, {
@@ -169,9 +256,64 @@ async function getTypesUrl(packageName: string, version: string): Promise<string
       timeout: FETCH_TIMEOUT_MS,
     })
     return response.headers.get('x-typescript-types')
-  } catch (e) {
+  } catch (error) {
     // eslint-disable-next-line no-console
-    console.error(e)
+    console.error(error)
     return null
+  }
+}
+
+async function fetchPackageManifest(
+  packageName: string,
+  version: string,
+  registryFetch: DocsFetch,
+): Promise<Record<string, unknown>> {
+  const encodedName = encodePackageName(packageName)
+  return (await registryFetch(`${NPM_REGISTRY}/${encodedName}/${version}`, {
+    timeout: FETCH_TIMEOUT_MS,
+  })) as Record<string, unknown>
+}
+
+/**
+ * Get subpath export paths from the npm registry's package.json `exports` field.
+ * Only returns subpaths that declare types, either directly or in nested conditions.
+ *
+ * Skips the root export (".") since that's handled by the main getTypesUrl call.
+ * Skips wildcard patterns ("./foo/*") since they can't be resolved to specific files.
+ */
+export async function getSubpathExports(
+  packageName: string,
+  version: string,
+  registryFetch: DocsFetch,
+): Promise<string[]> {
+  try {
+    const pkgJson = await fetchPackageManifest(packageName, version, registryFetch)
+
+    const exports = pkgJson.exports
+    if (!exports || typeof exports !== 'object') {
+      return []
+    }
+
+    const subpaths: string[] = []
+
+    for (const [key, value] of Object.entries(exports as Record<string, unknown>)) {
+      // Skip root export (already tried), non-subpath entries, and wildcards
+      if (key === '.' || !key.startsWith('./') || key.includes('*')) {
+        continue
+      }
+
+      if (hasTypesCondition(value)) {
+        // Strip leading "./" for the esm.sh URL
+        subpaths.push(key.slice(2))
+      }
+
+      if (subpaths.length >= MAX_SUBPATH_EXPORTS) {
+        break
+      }
+    }
+
+    return subpaths
+  } catch {
+    return []
   }
 }

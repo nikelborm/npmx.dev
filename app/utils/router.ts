@@ -32,7 +32,7 @@ export function packageRoute(
 
 /** Full version history page (`/package/.../versions`) */
 export function packageVersionsRoute(packageName: string): RouteLocationRaw {
-  const [org, name = ''] = packageName.startsWith('@') ? packageName.split('/') : ['', packageName]
+  const { org, name } = splitPackageName(packageName)
   return { name: 'package-versions', params: { org, name } }
 }
 
@@ -49,6 +49,26 @@ export function diffRoute(
       org: org || undefined,
       packageName: name,
       versionRange: `${fromVersion}...${toVersion}`,
+    },
+  }
+}
+
+export function docsRoute(
+  packageName: string,
+  version: string,
+  entrypoint?: string | null,
+): RouteLocationRaw {
+  const { org, name } = splitPackageName(packageName)
+  const pathSegments = [...(org ? [org, name] : [name]), 'v', version]
+
+  if (entrypoint && entrypoint !== '.') {
+    pathSegments.push(...entrypoint.split('/'))
+  }
+
+  return {
+    name: 'docs',
+    params: {
+      path: pathSegments as [string, ...string[]],
     },
   }
 }

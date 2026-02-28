@@ -8,6 +8,10 @@ export interface DocsResponse {
   breadcrumbs?: string | null
   status: DocsStatus
   message?: string
+  /** Available docs entrypoints. `.` denotes the package root entrypoint. */
+  entrypoints?: string[]
+  /** The current docs entrypoint being viewed. `.` denotes the package root entrypoint. */
+  entrypoint?: string
 }
 
 export interface DocsSearchResponse {

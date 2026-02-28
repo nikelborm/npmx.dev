@@ -9,14 +9,9 @@ vi.mock('~/utils/npm/api', () => ({
   fetchAllPackageVersions: (...args: unknown[]) => mockFetchAllPackageVersions(...args),
 }))
 
-// Mock navigateTo
-const mockNavigateTo = vi.fn()
-vi.stubGlobal('navigateTo', mockNavigateTo)
-
 describe('VersionSelector', () => {
   beforeEach(() => {
     mockFetchAllPackageVersions.mockReset()
-    mockNavigateTo.mockReset()
   })
 
   describe('basic rendering', () => {

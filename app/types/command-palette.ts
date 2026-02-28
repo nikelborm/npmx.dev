@@ -11,6 +11,7 @@ export type CommandPaletteGroup =
   | 'settings'
   | 'npmx'
   | 'versions'
+  | 'entrypoints'
 
 export type CommandPaletteView = 'root' | 'languages' | 'accent-colors' | 'background-themes'
 
