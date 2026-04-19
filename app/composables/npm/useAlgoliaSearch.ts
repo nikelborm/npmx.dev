@@ -73,6 +73,10 @@ const ATTRIBUTES_TO_RETRIEVE = [
 
 const EXISTENCE_CHECK_ATTRS = ['name']
 
+function withSecurityHeldFilter(filters?: string): string {
+  return filters ? `(${filters}) AND NOT isSecurityHeld:true` : 'NOT isSecurityHeld:true'
+}
+
 function hitToSearchResult(hit: AlgoliaHit): NpmSearchResult {
   return {
     package: {
@@ -143,7 +147,7 @@ export function useAlgoliaSearch() {
           query,
           offset: options.from,
           length: options.size,
-          filters: options.filters || '',
+          filters: withSecurityHeldFilter(options.filters),
           analyticsTags: ['npmx.dev'],
           attributesToRetrieve: ATTRIBUTES_TO_RETRIEVE,
           attributesToHighlight: [],
@@ -188,7 +192,7 @@ export function useAlgoliaSearch() {
             query: '',
             offset,
             length,
-            filters: `owners.name:${ownerName}`,
+            filters: withSecurityHeldFilter(`owners.name:${ownerName}`),
             analyticsTags: ['npmx.dev'],
             attributesToRetrieve: ATTRIBUTES_TO_RETRIEVE,
             attributesToHighlight: [],
@@ -241,7 +245,14 @@ export function useAlgoliaSearch() {
       },
     )
 
-    const hits = response.results.filter((r): r is AlgoliaHit => r !== null && 'name' in r)
+    /**
+     * Algolia's /objects endpoint does not support `filters`,
+     * so we have to filter out security-held packages on client-side and count after filtering.
+     * ref. Retrieve records - Algolia - https://www.algolia.com/doc/rest-api/search/get-objects
+     */
+    const hits = response.results
+      .filter((r): r is AlgoliaHit => r !== null && 'name' in r)
+      .filter(h => !h.isSecurityHeld)
     return {
       isStale: false,
       objects: hits.map(hitToSearchResult),
@@ -265,7 +276,7 @@ export function useAlgoliaSearch() {
         query,
         offset: options.from,
         length: options.size,
-        filters: options.filters || '',
+        filters: withSecurityHeldFilter(options.filters),
         analyticsTags: ['npmx.dev'],
         attributesToRetrieve: ATTRIBUTES_TO_RETRIEVE,
         attributesToHighlight: [],

@@ -94,9 +94,6 @@ const visibleResults = computed(() => {
 
   let objects = raw.objects
 
-  // Filter out "Security holding package" packages taken down by npm registry
-  objects = objects.filter(r => !r.package.isSecurityHeld)
-
   // Filter out platform-specific packages if setting is enabled
   if (settings.value.hidePlatformPackages) {
     objects = objects.filter(r => !isPlatformSpecificPackage(r.package.name))
