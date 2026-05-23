@@ -56,7 +56,9 @@ export const ERROR_UNGH_API_KEY_EXHAUSTED =
 
 // microcosm services
 export const CONSTELLATION_HOST = 'constellation.microcosm.blue'
+export const SPACEDUST_HOST = 'spacedust.microcosm.blue'
 export const SLINGSHOT_HOST = 'slingshot.microcosm.blue'
+export const UFOS_API_HOST = 'ufos-api.microcosm.blue'
 
 // ATProtocol
 // References used to link packages to things that are not inherently atproto
