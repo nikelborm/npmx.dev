@@ -17,6 +17,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@nuxtjs/i18n',
     '@nuxtjs/color-mode',
+    '@sentry/nuxt/module',
     ...(isStorybook ? [] : ['@nuxt/fonts']),
   ],
 
@@ -129,10 +130,22 @@ export default defineNuxtConfig({
         allowQuery: ['offset', 'limit'],
       },
     },
-    '/api/registry/docs/**': { isr: true, cache: { maxAge: 365 * 24 * 60 * 60 } },
-    '/api/registry/file/**': { isr: true, cache: { maxAge: 365 * 24 * 60 * 60 } },
-    '/api/registry/provenance/**': { isr: true, cache: { maxAge: 365 * 24 * 60 * 60 } },
-    '/api/registry/files/**': { isr: true, cache: { maxAge: 365 * 24 * 60 * 60 } },
+    '/api/registry/docs/**': {
+      isr: true,
+      cache: { maxAge: 365 * 24 * 60 * 60 },
+    },
+    '/api/registry/file/**': {
+      isr: true,
+      cache: { maxAge: 365 * 24 * 60 * 60 },
+    },
+    '/api/registry/provenance/**': {
+      isr: true,
+      cache: { maxAge: 365 * 24 * 60 * 60 },
+    },
+    '/api/registry/files/**': {
+      isr: true,
+      cache: { maxAge: 365 * 24 * 60 * 60 },
+    },
     '/api/registry/package-meta/**': { isr: 300 },
     '/:pkg/.well-known/skills/**': { isr: 3600 },
     '/:scope/:pkg/.well-known/skills/**': { isr: 3600 },
@@ -192,15 +205,25 @@ export default defineNuxtConfig({
     '/leaderboard/likes': getISRConfig(900),
     '/package/**': getISRConfig(300, { fallback: 'html' }),
     '/package/:name/_payload.json': getISRConfig(300, { fallback: 'json' }),
-    '/package/:name/v/:version/_payload.json': getISRConfig(300, { fallback: 'json' }),
-    '/package/:org/:name/_payload.json': getISRConfig(300, { fallback: 'json' }),
-    '/package/:org/:name/v/:version/_payload.json': getISRConfig(300, { fallback: 'json' }),
+    '/package/:name/v/:version/_payload.json': getISRConfig(300, {
+      fallback: 'json',
+    }),
+    '/package/:org/:name/_payload.json': getISRConfig(300, {
+      fallback: 'json',
+    }),
+    '/package/:org/:name/v/:version/_payload.json': getISRConfig(300, {
+      fallback: 'json',
+    }),
     // infinite cache (versioned - doesn't change)
     '/package-code/**': {
-      headers: { 'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=31536000' },
+      headers: {
+        'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=31536000',
+      },
     },
     '/package-docs/**': {
-      headers: { 'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=31536000' },
+      headers: {
+        'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=31536000',
+      },
     },
     // static pages
     '/': { prerender: true },
@@ -442,6 +465,19 @@ export default defineNuxtConfig({
   imports: {
     dirs: ['~/composables', '~/composables/*/*.ts'],
   },
+
+  // @ts-expect-error FIXME later
+  sentry: {
+    org: 'npmxdev',
+    project: 'npmx',
+    sourcemaps: {
+      // This will delete all .map files in the build output after uploading them to Sentry. Modify as needed.
+      // For more information, see: https://docs.sentry.io/platforms/javascript/guides/nuxt/sourcemaps/
+      filesToDeleteAfterUpload: ['.*/**/*.map'],
+    },
+    autoInjectServerSentry: 'top-level-import',
+  },
+  sourcemap: { client: 'hidden' },
 })
 
 interface ISRConfigOptions {

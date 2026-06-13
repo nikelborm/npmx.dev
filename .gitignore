@@ -55,3 +55,6 @@ storybook-static
 .agents
 .vscode/mcp.json
 AGENTS.md
+
+# Sentry Config File
+.env.sentry-build-plugin

@@ -66,6 +66,7 @@
     "@nuxtjs/color-mode": "4.0.0",
     "@nuxtjs/html-validator": "2.1.0",
     "@nuxtjs/i18n": "10.2.4",
+    "@sentry/nuxt": "^10",
     "@shikijs/langs": "4.0.2",
     "@shikijs/markdown-exit": "4.0.2",
     "@shikijs/themes": "4.0.2",
@@ -88,6 +89,7 @@
     "fast-npm-meta": "1.4.2",
     "focus-trap": "^8.0.0",
     "gray-matter": "4.0.3",
+    "import-in-the-middle": "3.0.2",
     "ipaddr.js": "2.3.0",
     "marked": "18.0.0",
     "module-replacements": "3.0.0-beta.8",
@@ -154,6 +156,11 @@
     "node": "24"
   },
   "packageManager": "pnpm@11.1.1",
+  "pnpm": {
+    "overrides": {
+      "@vercel/nft": "^0.27.4"
+    }
+  },
   "storybook": {
     "url": "https://storybook.npmx.dev"
   }
