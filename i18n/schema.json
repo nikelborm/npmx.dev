@@ -1345,6 +1345,27 @@
               },
               "additionalProperties": false
             },
+            "install_size_distribution": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "subtitle": {
+                  "type": "string"
+                },
+                "view": {
+                  "type": "string"
+                },
+                "self": {
+                  "type": "string"
+                },
+                "other": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
             "main_information": {
               "type": "string"
             },

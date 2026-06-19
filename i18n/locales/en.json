@@ -447,6 +447,13 @@
         "unpacked": "{size} unpacked size (this package)",
         "total": "{size} total unpacked size (including {count} dependency for linux-x64) | {size} total unpacked size (including all {count} dependencies for linux-x64)"
       },
+      "install_size_distribution": {
+        "title": "Install Size Distribution",
+        "subtitle": "{size} across this package and {count} dependencies (linux-x64)",
+        "view": "View install size distribution",
+        "self": "{package} (self)",
+        "other": "Other ({count} dependency) | Other ({count} dependencies)"
+      },
       "main_information": "Main Information",
       "trends": "Trends",
       "version_distribution": "Version Distribution"

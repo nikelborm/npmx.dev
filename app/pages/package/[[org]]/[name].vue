@@ -493,6 +493,8 @@ const dependencyCount = computed(() => getDependencyCount(displayVersion.value))
 const numberFormatter = useNumberFormatter()
 const bytesFormatter = useBytesFormatter()
 
+const installSizeModal = useModal('install-size-modal')
+
 useHead({
   link: [{ rel: 'canonical', href: canonicalUrl }],
 })
@@ -702,6 +704,18 @@ const showSkeleton = shallowRef(false)
                     >
                       (<span class="i-svg-spinners:ring-resize w-3 h-3" aria-hidden="true" />)
                     </span>
+                    <button
+                      v-else-if="installSize?.totalSize && installSize.dependencyCount"
+                      type="button"
+                      dir="ltr"
+                      class="text-fg hover:text-accent underline decoration-dotted decoration-fg-subtle/60 underline-offset-2 transition-colors focus-visible:outline-2 focus-visible:outline-accent/70 rounded"
+                      :title="$t('package.stats.install_size_distribution.view')"
+                      @click="installSizeModal.open()"
+                    >
+                      <span class="text-fg-subtle">(</span
+                      >{{ bytesFormatter.format(installSize.totalSize)
+                      }}<span class="text-fg-subtle">)</span>
+                    </button>
                     <span v-else-if="installSize?.totalSize" dir="ltr">
                       <span class="text-fg-subtle">(</span
                       >{{ bytesFormatter.format(installSize.totalSize)
@@ -766,6 +780,11 @@ const showSkeleton = shallowRef(false)
               :package-name="pkg.name"
               :version="resolvedVersion || undefined"
             />
+          </ClientOnly>
+
+          <!-- Install size distribution Modal -->
+          <ClientOnly>
+            <PackageInstallSizeModal :install-size="installSize" :package-name="pkg.name" />
           </ClientOnly>
         </section>
 
