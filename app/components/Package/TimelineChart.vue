@@ -8,9 +8,9 @@ import {
   type VueUiXyDatasetLineItem,
   type VueUiXyDatasetPlotItem,
 } from 'vue-data-ui/vue-ui-xy'
+import { useTooltipPosition } from 'vue-data-ui/composables'
 import {
   sanitise,
-  loadFile,
   applyEllipsis,
   copyAltTextForTimelineChart,
   type EnrichedTimelineSizeCacheEntry,
@@ -18,9 +18,9 @@ import {
 } from '~/utils/charts'
 import type { TimelineVersion, SubEvent } from '~~/server/api/registry/timeline/[...pkg].get'
 import { drawSmallNpmxLogoAndTaglineWatermark } from '~/composables/useChartWatermark'
-import { useChartTooltipPosition } from '~/composables/useChartTooltipPosition'
 import { useColors } from '~/composables/useColors'
 import { parseStableVersion } from '~/utils/versions'
+import { downloadFileLink } from '~/utils/download'
 
 import('vue-data-ui/style.css')
 
@@ -187,7 +187,7 @@ const datasets = computed<{
       {
         name: $t('package.stats.install_size'),
         type: 'line',
-        smooth: true,
+        useStepper: true,
         series: seriesTotalSize.value.values,
         temperatureColors: areAllValuesEqual(seriesTotalSize.value.values)
           ? undefined
@@ -200,7 +200,7 @@ const datasets = computed<{
       {
         name: $t('compare.dependencies'),
         type: 'line',
-        smooth: true,
+        useStepper: true,
         series: seriesDependencies.value.values,
         temperatureColors: areAllValuesEqual(seriesDependencies.value.values)
           ? undefined
@@ -272,7 +272,7 @@ function buildExportFilename(extension: 'png' | 'csv' | 'svg') {
   return `${sanitise(packageName.value)}_${$t('package.links.timeline')}_${metricLabel.value.toLocaleLowerCase().replaceAll(' ', '-')}.${extension}`
 }
 
-const tooltipPosition = useChartTooltipPosition(chartRef)
+const tooltipPosition = useTooltipPosition(chartRef)
 
 const config = computed<VueUiXyConfig>(() => {
   return {
@@ -375,7 +375,7 @@ const config = computed<VueUiXyConfig>(() => {
           img: args => {
             const imageUri = args?.imageUri
             if (!imageUri) return
-            loadFile(imageUri, buildExportFilename('png'))
+            downloadFileLink(imageUri, buildExportFilename('png'))
           },
           csv: csvStr => {
             if (!csvStr) return
@@ -392,14 +392,14 @@ const config = computed<VueUiXyConfig>(() => {
                 .replaceAll(`\n${multilineDateTemplate}`, ` ${multilineDateTemplate}`),
             ])
             const url = URL.createObjectURL(blob)
-            loadFile(url, buildExportFilename('csv'))
+            downloadFileLink(url, buildExportFilename('csv'))
             URL.revokeObjectURL(url)
           },
           svg: args => {
             const blob = args?.blob
             if (!blob) return
             const url = URL.createObjectURL(blob)
-            loadFile(url, buildExportFilename('svg'))
+            downloadFileLink(url, buildExportFilename('svg'))
             URL.revokeObjectURL(url)
           },
           altCopy: () =>
@@ -914,8 +914,12 @@ const indexSelection = computed(() => {
   transition: all 0.5s var(--super-ease-out) !important;
 }
 
+:deep(.vdui-shape-no-transition) {
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  ::deep(.vue-data-ui-component .serie_line_0 path),
+  :deep(.vue-data-ui-component .serie_line_0 path),
   .svg-element-transition,
   :deep(.vdui-shape-circle) {
     transition: none !important;

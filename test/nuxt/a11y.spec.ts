@@ -158,15 +158,21 @@ import {
   BuildEnvironment,
   ButtonBase,
   LandingIntroHeader,
+  NoodleArtemisLogo,
   NoodleKawaiiLogo,
+  NoodleTransgenderVisibilityLogo,
+  NoodleListCard,
   NoodleNodejsLogo,
+  NoodlePressLogo,
   NoodlePride1Logo,
   NoodlePride2Logo,
+  NoodleLens,
   NoodlePride3Logo,
   NoodleTetrisLogo,
   LinkBase,
   CallToAction,
   ChangelogCard,
+  ChangelogSkeleton,
   ChangelogErrorMsg,
   CodeDirectoryListing,
   CodeFileTree,
@@ -201,7 +207,6 @@ import {
   OrgTeamsPanel,
   PackageAccessControls,
   PackageCard,
-  PackageChartModal,
   PackageClaimPackageModal,
   PackageCompatibility,
   PackageDependencies,
@@ -379,7 +384,25 @@ describe('component accessibility audits', () => {
     })
 
     it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleTransgenderVisibilityLogo)
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodlePressLogo)
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
       const component = await mountSuspended(NoodleNodejsLogo)
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleArtemisLogo)
       const results = await runAxe(component)
       expect(results.violations).toEqual([])
     })
@@ -404,6 +427,16 @@ describe('component accessibility audits', () => {
 
     it('should have no accessibility violations', async () => {
       const component = await mountSuspended(NoodleTetrisLogo)
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleLens, {
+        props: {
+          logo: NoodleKawaiiLogo,
+        },
+      })
       const results = await runAxe(component)
       expect(results.violations).toEqual([])
     })
@@ -962,12 +995,12 @@ describe('component accessibility audits', () => {
               homepage: 'https://react.dev',
               repository: {
                 type: 'git',
-                url: 'https://github.com/facebook/react.git',
+                url: 'https://github.com/react/react.git',
               },
               bugs: {
-                url: 'https://github.com/facebook/react/issues',
+                url: 'https://github.com/react/react/issues',
               },
-              funding: 'https://github.com/sponsors/facebook',
+              funding: 'https://github.com/facebook',
               dist: {
                 shasum: 'abc123def456',
                 tarball: 'https://registry.npmjs.org/react/-/react-18.2.0.tgz',
@@ -1090,22 +1123,6 @@ describe('component accessibility audits', () => {
   // Note: PackageWeeklyDownloadStats tests are skipped because vue-data-ui VueUiSparkline
   // component has issues in the test environment (requires DOM measurements that aren't
   // available during SSR-like test mounting).
-
-  describe('PackageChartModal', () => {
-    it('should have no accessibility violations when closed', async () => {
-      const component = await mountSuspended(PackageChartModal, {
-        props: { open: false, title: 'Downloads' },
-        slots: { default: '<div>Chart content</div>' },
-      })
-      const results = await runAxe(component)
-      expect(results.violations).toEqual([])
-    })
-
-    // Note: Testing the open state is challenging because native <dialog>.showModal()
-    // requires the element to be in the DOM and connected, which doesn't work well
-    // with the test environment's cloning approach. The dialog accessibility is
-    // inherently provided by the native <dialog> element with aria-labelledby.
-  })
 
   describe('PackageTrendsChart', () => {
     const mockWeeklyDownloads = [
@@ -1665,6 +1682,18 @@ describe('component accessibility audits', () => {
           html: '<pre><code><span class="line">const x = 1;</span><span class="line">const y = 2;</span></code></pre>',
           lines: 2,
           selectedLines: { start: 1, end: 1 },
+        },
+      })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations with import-link markup', async () => {
+      const component = await mountSuspended(CodeViewer, {
+        props: {
+          html: '<pre><code><span class="line"><a href="/package-code/vite/v/1.0.0/index" class="import-link">vite</a></span></code></pre>',
+          lines: 1,
+          selectedLines: null,
         },
       })
       const results = await runAxe(component)
@@ -2710,10 +2739,17 @@ describe('component accessibility audits', () => {
             id: 'a11y',
             title: '1.0.0',
             publishedAt: '2026-02-11 10:00:00.000Z',
+            link: 'https://github.com/nuxt/nuxt/releases/tag/v4.4.5',
           },
           tocHeaderClass: 'toc',
         },
       })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('ChangelogSkeleton', async () => {
+      const component = await mountSuspended(ChangelogSkeleton)
       const results = await runAxe(component)
       expect(results.violations).toEqual([])
     })
@@ -2922,6 +2958,24 @@ describe('component accessibility audits', () => {
           },
         },
         slots: { default: '<p>Blog post content here.</p>' },
+      })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+  })
+
+  describe('NoodleListCard', () => {
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleListCard, {
+        props: {
+          noodle: {
+            key: 'press',
+            slug: 'press',
+            title: 'Press',
+            date: '2026-05-01',
+            dateTo: '2026-05-04',
+          },
+        },
       })
       const results = await runAxe(component)
       expect(results.violations).toEqual([])

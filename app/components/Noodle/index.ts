@@ -1,5 +1,10 @@
+import type { Component } from 'vue'
+import NoodleArtemisLogo from './Artemis/Logo.vue'
 import NoodleKawaiiLogo from './Kawaii/Logo.vue'
+import NoodleNodejsLogo from './Nodejs/Logo.vue'
+import NoodlePressLogo from './Press/Logo.vue'
 import NoodlePride1Logo from './Pride1/Logo.vue'
+import NoodleTransgenderVisibilityLogo from './TransgenderVisibility/Logo.vue'
 import NoodlePride2Logo from './Pride2/Logo.vue'
 import NoodlePride3Logo from './Pride3/Logo.vue'
 import NoodleTetrisLogo from './Tetris/Logo.vue'
@@ -60,3 +65,20 @@ export const ACTIVE_NOODLES: Noodle[] = [
     timezone: 'auto',
   },
 ]
+
+// Logo registry for the /noodles archive, keyed by the entry's `key` in
+// app/noodles.ts. The homepage only renders PERMANENT_NOODLES + ACTIVE_NOODLES
+// above; the archive resolves any past noodle's logo through this map.
+const NOODLE_LOGOS: Record<string, Component> = {
+  'press': NoodlePressLogo,
+  'kawaii': NoodleKawaiiLogo,
+  'transgender-visibility-day': NoodleTransgenderVisibilityLogo,
+  'artemis': NoodleArtemisLogo,
+  'nodejs': NoodleNodejsLogo,
+  'pride-1': NoodlePride1Logo,
+  'tetris': NoodleTetrisLogo,
+}
+
+export function resolveNoodleLogo(key: string): Component | undefined {
+  return NOODLE_LOGOS[key]
+}
