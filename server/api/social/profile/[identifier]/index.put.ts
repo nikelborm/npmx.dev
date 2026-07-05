@@ -1,5 +1,6 @@
 import { parse } from 'valibot'
 import { Client } from '@atproto/lex'
+import { sessionAsAgent } from '#server/utils/atproto/oauth'
 import * as dev from '#shared/types/lexicons/dev'
 import type { NPMXProfile } from '#shared/types/social'
 import { ProfileEditBodySchema } from '#shared/schemas/social'
@@ -11,7 +12,7 @@ export default eventHandlerWithOAuthSession(async (event, oAuthSession) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  await throwOnMissingOAuthScope(oAuthSession, PROFILE_SCOPE)
+  await throwOnMissingOAuthScope(oAuthSession, dev.npmx.actor.profile.$nsid)
 
   const requestBody = await readBody(event)
   if (requestBody.website && !URL.canParse(requestBody.website)) {
@@ -19,7 +20,7 @@ export default eventHandlerWithOAuthSession(async (event, oAuthSession) => {
   }
 
   const body = parse(ProfileEditBodySchema, requestBody)
-  const client = new Client(oAuthSession)
+  const client = new Client(sessionAsAgent(oAuthSession))
 
   const profile = dev.npmx.actor.profile.$build({
     displayName: body.displayName,

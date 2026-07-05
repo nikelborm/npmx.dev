@@ -1,63 +1,42 @@
-import type {
-  OAuthClientMetadata,
-  OAuthRedirectUri,
-  OAuthSession,
-  WebUri,
-} from '@atproto/oauth-client-node'
-import { JoseKey, Keyset, oauthRedirectUriSchema, webUriSchema } from '@atproto/oauth-client-node'
+import {
+  scope,
+  OAuthClient,
+  type OAuthSession,
+  type ClientAssertionPrivateJwk,
+} from '@atcute/oauth-node-client'
+import {
+  LocalActorResolver,
+  CompositeHandleResolver,
+  CompositeDidDocumentResolver,
+  PlcDidDocumentResolver,
+  WebDidDocumentResolver,
+  DohJsonHandleResolver,
+} from '@atcute/identity-resolver'
+import { NodeDnsHandleResolver } from '@atcute/identity-resolver-node'
+import type { Agent } from '@atproto/lex'
 import type { EventHandlerRequest, H3Event, SessionManager } from 'h3'
-import { NodeOAuthClient, AtprotoDohHandleResolver } from '@atproto/oauth-client-node'
 import { getOAuthLock } from '#server/utils/atproto/lock'
 import { useOAuthStorage } from '#server/utils/atproto/storage'
-import { LIKES_SCOPE, PROFILE_SCOPE } from '#shared/utils/constants'
 import type { UserServerSession } from '#shared/types/userSession'
 // @ts-expect-error virtual file from oauth module
 import { clientUri } from '#oauth/config'
+import * as dev from '#shared/types/lexicons/dev'
 
-// TODO: If you add writing a new record you will need to add a scope for it
-export const scope = `atproto ${LIKES_SCOPE} ${PROFILE_SCOPE}`
-
-/**
- * Resolves a did to a handle via DoH or via the http website calls
- */
-export const handleResolver = new AtprotoDohHandleResolver({
-  dohEndpoint: 'https://cloudflare-dns.com/dns-query',
-})
+const SCOPES = [
+  scope.repo({
+    collection: [dev.npmx.feed.like.$nsid, dev.npmx.actor.profile.$nsid],
+    action: ['create', 'update', 'delete'],
+  }),
+]
 
 /**
- * Generates the OAuth client metadata. pkAlg is used to signify that the OAuth client is confidential
+ * Creates an @atproto/lex-compatible Agent from an atcute OAuthSession.
+ * Required for compatibility while @atproto/lex is still in use.
  */
-export function getOauthClientMetadata(pkAlg: string | undefined = undefined): OAuthClientMetadata {
-  const redirect_uri: OAuthRedirectUri = oauthRedirectUriSchema.parse(
-    `${clientUri}/api/auth/atproto`,
-  )
-
-  const client_id =
-    import.meta.dev || import.meta.test
-      ? `http://localhost?redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${encodeURIComponent(scope)}`
-      : `${clientUri}/oauth-client-metadata.json`
-
-  const jwks_uri: WebUri | undefined = pkAlg
-    ? webUriSchema.parse(`${clientUri}/.well-known/jwks.json`)
-    : undefined
-
+export function sessionAsAgent(session: OAuthSession): Agent {
   return {
-    client_name: 'npmx.dev',
-    client_id,
-    client_uri: clientUri,
-    logo_uri: webUriSchema.parse(`${clientUri}/logo-icon.svg`),
-    scope,
-    redirect_uris: [redirect_uri],
-    grant_types: ['authorization_code', 'refresh_token'],
-    application_type: 'web',
-    dpop_bound_access_tokens: true,
-    response_types: ['code'],
-    subject_type: 'public',
-    authorization_signed_response_alg: 'RS256',
-    // confidential client values
-    token_endpoint_auth_method: pkAlg ? 'private_key_jwt' : 'none',
-    jwks_uri,
-    token_endpoint_auth_signing_alg: pkAlg,
+    did: session.did,
+    fetchHandler: (path, init) => session.handle(path, init),
   }
 }
 
@@ -67,35 +46,65 @@ type EventHandlerWithOAuthSession<T extends EventHandlerRequest, D> = (
   serverSession: SessionManager,
 ) => Promise<D>
 
-export async function getNodeOAuthClient(): Promise<NodeOAuthClient> {
-  const { stateStore, sessionStore } = useOAuthStorage()
-
-  // These are optional and not expected or can be used easily in local development, only in production
+export async function getNodeOAuthClient(): Promise<OAuthClient> {
+  const { sessions, states } = useOAuthStorage()
   const keyset = await loadJWKs()
-  const pk = keyset?.findPrivateKey({ usage: 'sign' })
-  const clientMetadata = getOauthClientMetadata(pk?.alg)
+  const stores = { sessions, states }
+  const requestLock = getOAuthLock()
+  const redirectUri = new URL('/api/auth/atproto', clientUri).toString()
 
-  return new NodeOAuthClient({
-    stateStore,
-    sessionStore,
-    clientMetadata,
-    requestLock: getOAuthLock(),
-    handleResolver,
-    keyset,
+  const actorResolver = new LocalActorResolver({
+    handleResolver: new CompositeHandleResolver({
+      strategy: 'race',
+      methods: {
+        dns: new NodeDnsHandleResolver(),
+        http: new DohJsonHandleResolver({ dohUrl: 'https://cloudflare-dns.com/dns-query' }),
+      },
+    }),
+    didDocumentResolver: new CompositeDidDocumentResolver({
+      methods: {
+        plc: new PlcDidDocumentResolver(),
+        web: new WebDidDocumentResolver(),
+      },
+    }),
+  })
+
+  if (keyset) {
+    return new OAuthClient({
+      metadata: {
+        client_id: `${clientUri}/oauth-client-metadata.json`,
+        redirect_uris: [redirectUri],
+        client_name: 'npmx.dev',
+        client_uri: clientUri,
+        logo_uri: `${clientUri}/logo-icon.svg`,
+        jwks_uri: `${clientUri}/.well-known/jwks.json`,
+        scope: SCOPES,
+      },
+      keyset,
+      stores,
+      requestLock,
+      actorResolver,
+    })
+  }
+
+  return new OAuthClient({
+    metadata: {
+      redirect_uris: [redirectUri],
+      scope: SCOPES,
+    },
+    stores,
+    requestLock,
+    actorResolver,
   })
 }
 
-export async function loadJWKs(): Promise<Keyset | undefined> {
+export async function loadJWKs(): Promise<ClientAssertionPrivateJwk[] | undefined> {
   // If we ever need to add multiple JWKs to rotate keys we will need to add a new one
   // under a new variable and update here
   const jwkOne = useRuntimeConfig().oauthJwkOne
   if (!jwkOne) return undefined
 
-  // For multiple keys if we need to rotate
-  // const keys = await Promise.all([JoseKey.fromImportable(jwkOne)])
-
-  const keys = await JoseKey.fromImportable(jwkOne)
-  return new Keyset([keys])
+  return [JSON.parse(jwkOne) as ClientAssertionPrivateJwk]
 }
 
 async function getOAuthSession(event: H3Event): Promise<{
@@ -114,8 +123,6 @@ async function getOAuthSession(event: H3Event): Promise<{
     const oauthSession = await event.context.oauthClient.restore(currentSession.public.did)
     return { oauthSession, serverSession }
   } catch (error) {
-    // Log error safely without using util.inspect on potentially problematic objects
-    // The @atproto library creates error objects with getters that crash Node's util.inspect
     // eslint-disable-next-line no-console
     console.error(
       '[oauth] Failed to get session:',
@@ -129,6 +136,9 @@ async function getOAuthSession(event: H3Event): Promise<{
  * Throws if the logged in OAuth Session does not have the required scopes.
  * As we add new scopes we need to check if the client has the ability to use it.
  * If not need to let the client know to redirect the user to the PDS to upgrade their scopes.
+ *
+ * @todo should do a more thorough check by parsing scopes
+ *
  * @param oAuthSession - The current OAuth session from the event
  * @param requiredScopes - The required scope you are checking if you can use
  */

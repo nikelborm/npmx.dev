@@ -12,8 +12,11 @@ export default defineNuxtModule({
   async setup() {
     const nuxt = useNuxt()
 
-    const { previewUrl, productionUrl } = await getEnv(nuxt.options.dev)
-    const clientUri = productionUrl || previewUrl || 'http://127.0.0.1:3000'
+    const { previewUrl, productionUrl, env } = await getEnv(nuxt.options.dev)
+    const clientUri =
+      productionUrl ||
+      (env === 'canary' ? 'https://main.npmx.dev' : previewUrl) ||
+      'http://127.0.0.1:3000'
 
     // bake it into a virtual file
     addServerTemplate({

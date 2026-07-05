@@ -1,16 +1,13 @@
 import { setTimeout } from 'node:timers/promises'
-import type { RuntimeLock } from '@atproto/oauth-client-node'
-import { requestLocalLock } from '@atproto/oauth-client-node'
+import type { LockFunction } from '@atcute/oauth-node-client'
 import { Redis } from '@upstash/redis'
-
-type Awaitable<T> = T | PromiseLike<T>
 
 /**
  * Creates a distributed lock using Upstash Redis.
  * Falls back gracefully if the lock cannot be acquired.
  */
-function createUpstashLock(redis: Redis): RuntimeLock {
-  return async <T>(key: string, fn: () => Awaitable<T>): Promise<T> => {
+function createUpstashLock(redis: Redis): LockFunction {
+  return async <T>(key: string, fn: () => Promise<T>): Promise<T> => {
     const lockKey = `oauth:lock:${key}`
     const lockValue = crypto.randomUUID()
     const lockTTL = 30 // seconds
@@ -50,9 +47,9 @@ function createUpstashLock(redis: Redis): RuntimeLock {
 /**
  * Returns the appropriate lock mechanism based on environment:
  * - Production with Upstash config: distributed Redis lock
- * - Otherwise: in-memory lock (sufficient for single instance)
+ * - Otherwise: undefined (OAuthClient uses its own in-memory lock by default)
  */
-export function getOAuthLock(): RuntimeLock {
+export function getOAuthLock(): LockFunction | undefined {
   const config = useRuntimeConfig()
 
   // Use distributed lock in production if Upstash is configured
@@ -64,6 +61,6 @@ export function getOAuthLock(): RuntimeLock {
     return createUpstashLock(redis)
   }
 
-  // Fall back to in-memory lock for dev/preview or when Redis isn't configured
-  return requestLocalLock
+  // Fall back to undefined for dev/preview — OAuthClient defaults to in-memory lock
+  return undefined
 }

@@ -13,11 +13,6 @@ vi.mock('@upstash/redis', () => ({
   },
 }))
 
-const mockLocalLock = vi.fn()
-vi.mock('@atproto/oauth-client-node', () => ({
-  requestLocalLock: mockLocalLock,
-}))
-
 const mockConfig = {
   upstash: {
     redisRestUrl: '',
@@ -44,28 +39,28 @@ describe('lock', () => {
     mockConfig.upstash.redisRestToken = ''
   })
 
-  it('returns local lock when upstash is not configured', () => {
+  it('returns undefined when upstash is not configured', () => {
     const lock = getOAuthLock()
-    expect(lock).toBe(mockLocalLock)
+    expect(lock).toBeUndefined()
   })
 
-  it('returns local lock when only redisRestUrl is set', () => {
+  it('returns undefined when only redisRestUrl is set', () => {
     mockConfig.upstash.redisRestUrl = 'https://totally-a-redis-server.com'
     const lock = getOAuthLock()
-    expect(lock).toBe(mockLocalLock)
+    expect(lock).toBeUndefined()
   })
 
-  it('returns local lock when only redisRestToken is set', () => {
+  it('returns undefined when only redisRestToken is set', () => {
     mockConfig.upstash.redisRestToken = 'super-fancy-secret-token'
     const lock = getOAuthLock()
-    expect(lock).toBe(mockLocalLock)
+    expect(lock).toBeUndefined()
   })
 
   it('returns upstash lock when both url and token are configured', () => {
     mockConfig.upstash.redisRestUrl = 'https://redis.redis.redis'
     mockConfig.upstash.redisRestToken = 'token-123'
     const lock = getOAuthLock()
-    expect(lock).not.toBe(mockLocalLock)
+    expect(lock).not.toBeUndefined()
     expect(typeof lock).toBe('function')
   })
 
@@ -75,7 +70,7 @@ describe('lock', () => {
     mockRedisDel.mockResolvedValueOnce(1)
 
     const lock = getUpstashLock()
-    const result = await lock('test-key', () => 'hello')
+    const result = await lock!('test-key', () => Promise.resolve('hello'))
 
     expect(result).toBe('hello')
     expect(mockRedisSet).toHaveBeenCalledOnce()
@@ -94,7 +89,7 @@ describe('lock', () => {
     mockRedisDel.mockResolvedValueOnce(1)
 
     const lock = getUpstashLock()
-    const result = await lock('retry-key', () => 42)
+    const result = await lock!('retry-key', () => Promise.resolve(42))
 
     expect(result).toBe(42)
     expect(mockRedisSet).toHaveBeenCalledTimes(2)
@@ -105,7 +100,7 @@ describe('lock', () => {
     mockRedisSet.mockResolvedValueOnce(null).mockResolvedValueOnce(null)
 
     const lock = getUpstashLock()
-    const result = await lock('no-lock-key', () => 'fallback')
+    const result = await lock!('no-lock-key', () => Promise.resolve('fallback'))
 
     expect(result).toBe('fallback')
     expect(mockRedisSet).toHaveBeenCalledTimes(2)
@@ -118,7 +113,7 @@ describe('lock', () => {
     mockRedisGet.mockResolvedValueOnce('some-other-uuid')
 
     const lock = getUpstashLock()
-    await lock('stolen-key', () => 'done')
+    await lock!('stolen-key', () => Promise.resolve('done'))
 
     expect(mockRedisGet).toHaveBeenCalledWith('oauth:lock:stolen-key')
     expect(mockRedisDel).not.toHaveBeenCalled()
@@ -131,7 +126,7 @@ describe('lock', () => {
 
     const lock = getUpstashLock()
     await expect(
-      lock('error-key', () => {
+      lock!('error-key', () => {
         throw new Error('boom')
       }),
     ).rejects.toThrow('boom')
@@ -145,7 +140,7 @@ describe('lock', () => {
     mockRedisDel.mockResolvedValueOnce(1)
 
     const lock = getUpstashLock()
-    const result = await lock('async-key', async () => {
+    const result = await lock!('async-key', async () => {
       await setTimeout(10)
       return 'async-result'
     })

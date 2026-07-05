@@ -1,7 +1,7 @@
-import type { NodeOAuthClient } from '@atproto/oauth-client-node'
+import type { OAuthClient } from '@atcute/oauth-node-client'
 
 /**
- * Creates a long living instance of the NodeOAuthClient.
+ * Creates a long living instance of the OAuthClient.
  */
 export default defineNitroPlugin(async nitroApp => {
   const oauthClient = await getNodeOAuthClient()
@@ -15,6 +15,6 @@ export default defineNitroPlugin(async nitroApp => {
 // Extend the H3EventContext type
 declare module 'h3' {
   interface H3EventContext {
-    oauthClient: NodeOAuthClient
+    oauthClient: OAuthClient
   }
 }

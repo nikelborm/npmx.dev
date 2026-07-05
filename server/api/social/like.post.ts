@@ -1,8 +1,8 @@
 import * as v from 'valibot'
 import { Client, toDatetimeString } from '@atproto/lex'
+import { sessionAsAgent } from '#server/utils/atproto/oauth'
 import * as dev from '#shared/types/lexicons/dev'
 import type { UriString } from '@atproto/lex'
-import { LIKES_SCOPE } from '#shared/utils/constants'
 import { PackageLikeBodySchema } from '#shared/schemas/social'
 import { throwOnMissingOAuthScope } from '#server/utils/atproto/oauth'
 
@@ -13,8 +13,8 @@ export default eventHandlerWithOAuthSession(async (event, oAuthSession) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  //Checks if the user has a scope to like packages
-  await throwOnMissingOAuthScope(oAuthSession, LIKES_SCOPE)
+  // Checks if the user has a scope to like packages
+  await throwOnMissingOAuthScope(oAuthSession, dev.npmx.feed.like.$nsid)
 
   const body = v.parse(PackageLikeBodySchema, await readBody(event))
 
@@ -27,7 +27,7 @@ export default eventHandlerWithOAuthSession(async (event, oAuthSession) => {
   }
 
   const subjectRef = PACKAGE_SUBJECT_REF(body.packageName)
-  const client = new Client(oAuthSession)
+  const client = new Client(sessionAsAgent(oAuthSession))
 
   const like = dev.npmx.feed.like.$build({
     createdAt: toDatetimeString(new Date()),

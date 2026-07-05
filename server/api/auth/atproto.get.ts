@@ -1,5 +1,5 @@
-import type { OAuthSession } from '@atproto/oauth-client-node'
-import { OAuthCallbackError } from '@atproto/oauth-client-node'
+import type { AuthorizeTarget, OAuthSession } from '@atcute/oauth-node-client'
+import { OAuthCallbackError } from '@atcute/oauth-node-client'
 import { createError, getQuery, sendRedirect, setCookie, getCookie, deleteCookie } from 'h3'
 import type { H3Event } from 'h3'
 import { SLINGSHOT_HOST } from '#shared/utils/constants'
@@ -10,13 +10,22 @@ import { Client, isAtUriString, isTypedBlobRef } from '@atproto/lex'
 import * as app from '#shared/types/lexicons/app'
 import * as blue from '#shared/types/lexicons/blue'
 import { isAtIdentifierString } from '@atproto/lex'
-import { scope } from '#server/utils/atproto/oauth'
+import { sessionAsAgent } from '#server/utils/atproto/oauth'
 import { UNSET_NUXT_SESSION_PASSWORD } from '#shared/utils/constants'
 // @ts-expect-error virtual file from oauth module
 import { clientUri } from '#oauth/config'
+import type { ActorIdentifier } from '@atcute/lexicons'
+import { isActorIdentifier } from '@atcute/lexicons/syntax'
 
 const OAUTH_REQUEST_COOKIE_PREFIX = 'atproto_oauth_req'
 const slingshotClient = new Client({ service: `https://${SLINGSHOT_HOST}` })
+
+function isValidTarget(target: unknown): target is `https://${string}` | ActorIdentifier {
+  return (
+    typeof target === 'string' &&
+    (isAtIdentifierString(target) || (URL.canParse(target) && target.startsWith('https://')))
+  )
+}
 
 export default defineEventHandler(async event => {
   const config = useRuntimeConfig(event)
@@ -32,10 +41,7 @@ export default defineEventHandler(async event => {
 
   if (query.handle) {
     // Initiate auth flow
-    if (
-      typeof query.handle !== 'string' ||
-      (!query.handle.startsWith('https://') && !isAtIdentifierString(query.handle))
-    ) {
+    if (!isValidTarget(query.handle)) {
       throw createError({
         statusCode: 400,
         message: 'Invalid handle parameter',
@@ -55,9 +61,13 @@ export default defineEventHandler(async event => {
       // Invalid URL, fall back to root
     }
 
+    const target: AuthorizeTarget = isActorIdentifier(query.handle)
+      ? { type: 'account', identifier: query.handle }
+      : { type: 'pds', serviceUrl: query.handle }
+
     try {
-      const redirectUrl = await event.context.oauthClient.authorize(query.handle, {
-        scope,
+      const { url } = await event.context.oauthClient.authorize({
+        target,
         prompt: query.create ? 'create' : undefined,
         // TODO: I do not believe this is working as expected on
         // an unsupported locale on the PDS. Gives Invalid at body.ui_locales
@@ -66,7 +76,7 @@ export default defineEventHandler(async event => {
         state: encodeOAuthState(event, { redirectPath }),
       })
 
-      return sendRedirect(event, redirectUrl.toString())
+      return sendRedirect(event, url.toString())
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to initiate authentication.'
 
@@ -182,8 +192,8 @@ function generateRandomHexString(byteLength: number = 16): string {
  * @returns The original OAuth state if the id is valid
  * @throws An error if the id is missing or invalid, indicating a potential issue with cookies or expired state
  */
-function decodeOAuthState(event: H3Event, state: string | null): OAuthStateData {
-  if (!state) {
+function decodeOAuthState(event: H3Event, state: unknown): OAuthStateData {
+  if (!state || typeof state !== 'string') {
     // May happen during transition period (if a user initiated auth flow before
     // the release with the new state handling, then tries to complete it after
     // the release).
@@ -233,7 +243,7 @@ async function getMiniProfile(authSession: OAuthSession) {
   if (response.success) {
     const miniDoc = response.body
 
-    let avatar: string | undefined = await getAvatar(authSession.did, miniDoc.pds)
+    const avatar: string | undefined = await getAvatar(authSession.did, miniDoc.pds)
 
     return {
       ...miniDoc,
@@ -242,7 +252,7 @@ async function getMiniProfile(authSession: OAuthSession) {
   } else {
     //If slingshot fails we still want to set some key info we need.
     const pdsBase = (await authSession.getTokenInfo()).aud
-    let avatar: string | undefined = await getAvatar(authSession.did, pdsBase)
+    const avatar: string | undefined = await getAvatar(authSession.did, pdsBase)
     return {
       did: authSession.did,
       handle: 'Not available',
@@ -285,7 +295,7 @@ async function getAvatar(did: DidString, pds: string) {
 }
 
 async function getNpmxProfile(handle: string, authSession: OAuthSession) {
-  const client = new Client(authSession)
+  const client = new Client(sessionAsAgent(authSession))
 
   // get existing npmx profile OR create a new one
   const profileUri = `at://${client.did}/dev.npmx.actor.profile/self`

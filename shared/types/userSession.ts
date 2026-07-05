@@ -1,9 +1,9 @@
-import type { NodeSavedSession } from '@atproto/oauth-client-node'
+import type { Did } from '@atcute/lexicons'
 
 export interface UserServerSession {
   public?:
     | {
-        did: string
+        did: Did
         handle: string
         pds: string
         avatar?: string
@@ -19,5 +19,5 @@ export interface UserServerSession {
 
   // DO NOT USE
   // Here for historic reasons to redirect users logged in with the previous oauth to login again
-  oauthSession?: NodeSavedSession | undefined
+  oauthSession?: unknown
 }

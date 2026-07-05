@@ -1,4 +1,4 @@
-import type { NodeSavedSession, NodeSavedSessionStore } from '@atproto/oauth-client-node'
+import type { SessionStore, StoredSession } from '@atcute/oauth-node-client'
 import { OAUTH_CACHE_STORAGE_BASE } from '#server/utils/atproto/storage'
 
 // Refresh tokens from a confidential client should last for 180 days, each new refresh of access token resets
@@ -6,7 +6,7 @@ import { OAUTH_CACHE_STORAGE_BASE } from '#server/utils/atproto/storage'
 // Note: This expiration only lasts this long in production. Local dev is 2 weeks
 const SESSION_EXPIRATION = CACHE_MAX_AGE_ONE_DAY * 179
 
-export class OAuthSessionStore implements NodeSavedSessionStore {
+export class OAuthSessionStore implements SessionStore {
   private readonly cache: CacheAdapter
 
   constructor() {
@@ -17,16 +17,20 @@ export class OAuthSessionStore implements NodeSavedSessionStore {
     return `sessions:${did}`
   }
 
-  async get(key: string): Promise<NodeSavedSession | undefined> {
-    let session = await this.cache.get<NodeSavedSession>(this.createStorageKey(key))
+  async get(key: string): Promise<StoredSession | undefined> {
+    const session = await this.cache.get<StoredSession>(this.createStorageKey(key))
     return session ?? undefined
   }
 
-  async set(key: string, val: NodeSavedSession) {
-    await this.cache.set<NodeSavedSession>(this.createStorageKey(key), val, SESSION_EXPIRATION)
+  async set(key: string, val: StoredSession) {
+    await this.cache.set<StoredSession>(this.createStorageKey(key), val, SESSION_EXPIRATION)
   }
 
-  async del(key: string) {
+  async delete(key: string) {
     await this.cache.delete(this.createStorageKey(key))
+  }
+
+  async clear() {
+    // Cache adapter does not expose bulk-clear; individual sessions expire via TTL
   }
 }
