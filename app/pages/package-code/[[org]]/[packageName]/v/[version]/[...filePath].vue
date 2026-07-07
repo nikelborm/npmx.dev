@@ -473,9 +473,9 @@ onPrehydrate(el => {
     >
       <!-- File tree sidebar - sticky with internal scroll -->
       <aside
-        class="sticky top-25 w-64 lg:w-72 hidden md:block h-[calc(100vh-10.5rem)] shrink-0 self-start bg-bg-subtle border-ie border-border"
+        class="sticky top-25 w-64 lg:w-72 hidden md:block h-screen shrink-0 self-start bg-bg-subtle border-ie border-border"
       >
-        <div class="h-[calc(100vh-10.5rem)] overflow-y-auto">
+        <div class="h-screen overflow-y-auto">
           <CodeFileTree
             :tree="fileTree.tree"
             :current-path="filePath ?? ''"
