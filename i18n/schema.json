@@ -1293,6 +1293,81 @@
             },
             "deps": {
               "type": "string"
+            },
+            "analyze": {
+              "type": "object",
+              "properties": {
+                "analyze": {
+                  "type": "string"
+                },
+                "cancel": {
+                  "type": "string"
+                },
+                "cancelling": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "object",
+                  "properties": {
+                    "total_size": {
+                      "type": "string"
+                    },
+                    "js_core_size": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "string"
+                    },
+                    "deps_variation": {
+                      "type": "string"
+                    },
+                    "deps_details": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "diff": {
+                  "type": "string"
+                },
+                "only_deps": {
+                  "type": "string"
+                },
+                "all_deps": {
+                  "type": "string"
+                },
+                "expand": {
+                  "type": "string"
+                },
+                "collapse": {
+                  "type": "string"
+                },
+                "added": {
+                  "type": "string"
+                },
+                "removed": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "object",
+                  "properties": {
+                    "added": {
+                      "type": "string"
+                    },
+                    "changed": {
+                      "type": "string"
+                    },
+                    "unchanged": {
+                      "type": "string"
+                    },
+                    "removed": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

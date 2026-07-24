@@ -421,7 +421,32 @@
       "title_deps": "Aumento significativo del número de dependencias desde v{version}",
       "title_both": "Aumento significativo del tamaño y de las dependencias desde v{version}",
       "size": "El tamaño de instalación aumentó un {percent} ({size} más grande)",
-      "deps": "{count} dependencias más"
+      "deps": "{count} dependencias más",
+      "analyze": {
+        "analyze": "Analizar",
+        "cancel": "Cancelar",
+        "cancelling": "Cancelando...",
+        "summary": {
+          "total_size": "Variación de tamaño (total): {size} {bytes}",
+          "js_core_size": "Variación de tamaño (sólo dependencias): {size} {bytes}",
+          "bytes": "({bytes} bytes)",
+          "deps_variation": "Variación de dependencias: {net} ({details})",
+          "deps_details": "Añadidas: {added}, Eliminadas: {removed}"
+        },
+        "diff": "Balance de diferencias",
+        "only_deps": "Sólo dependencias",
+        "all_deps": "Todas las dependencias",
+        "expand": "Expandir",
+        "collapse": "Contraer",
+        "added": "Añadidas",
+        "removed": "Eliminadas",
+        "status": {
+          "added": "Añadida",
+          "changed": "Modificada",
+          "unchanged": "Sin cambios",
+          "removed": "Eliminada"
+        }
+      }
     },
     "size_decrease": {
       "title_size": "¡El tamaño del paquete ha disminuido desde v{version}!",

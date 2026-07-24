@@ -20,15 +20,38 @@ export const useBytesFormatter = () => {
   const MB = 1000 * 1000
 
   return {
+    t,
     format: (bytes: number) => {
-      if (bytes < KB)
+      if (bytes >= 0) {
+        if (bytes < KB) {
+          return t('package.size.b', {
+            size: decimalNumberFormatter.value.format(bytes),
+          })
+        }
+        if (bytes < MB) {
+          return t('package.size.kb', {
+            size: decimalNumberFormatter.value.format(bytes / KB),
+          })
+        }
+
+        return t('package.size.mb', {
+          size: decimalNumberFormatter.value.format(bytes / MB),
+        })
+      }
+
+      const v = Math.abs(bytes)
+
+      if (v < KB) {
         return t('package.size.b', {
           size: decimalNumberFormatter.value.format(bytes),
         })
-      if (bytes < MB)
+      }
+      if (v < MB) {
         return t('package.size.kb', {
           size: decimalNumberFormatter.value.format(bytes / KB),
         })
+      }
+
       return t('package.size.mb', {
         size: decimalNumberFormatter.value.format(bytes / MB),
       })

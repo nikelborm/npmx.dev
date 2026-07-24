@@ -1,0 +1,210 @@
+import type { AnalyzeWorkerResponse, UIDiffResult, UISummary } from '~/utils/pkg-size/types'
+import { shallowRef, onMounted, onUnmounted } from 'vue'
+import { useThrottleFn } from '@vueuse/core'
+import { useBytesFormatter, useNumberFormatter } from '~/composables/useNumberFormatter'
+
+export function useAnalyzeCauseWorker(
+  packageName: string,
+  version: ComputedRef<string | undefined | null>,
+  comparedVersion: ComputedRef<string | undefined | null>,
+) {
+  const analyzing = shallowRef(false)
+  const available = shallowRef(false)
+  const loading = shallowRef(true)
+  const cancelling = shallowRef(false)
+  const noResultScroll = shallowRef(false)
+  const allDependencies = shallowRef(true)
+
+  const rawResult = shallowRef<UIDiffResult[]>([])
+  const result = computed(() => {
+    const all = allDependencies.value
+    const raw = rawResult.value
+    if (all || raw.length === 0) {
+      return raw
+    }
+    return raw.filter(v => !v.isOptional)
+  })
+  const summary = shallowRef<UISummary | undefined>()
+  const error = shallowRef<string | null>(null)
+
+  let startAnalyzeCause: () => void = () => {}
+  let cancelAnalyzeCause: () => void = () => {}
+
+  if (import.meta.server) {
+    return {
+      available,
+      analyzing,
+      cancelling,
+      loading,
+      result,
+      noResultScroll,
+      allDependencies,
+      summary,
+      error,
+      startAnalyzeCause,
+      cancelAnalyzeCause,
+    }
+  }
+
+  let worker: Worker | undefined
+  let currentId = 0
+
+  const bytesFormatter = useBytesFormatter()
+  const rawBytesFormatter = useNumberFormatter()
+
+  startAnalyzeCause = useThrottleFn(
+    async () => {
+      if (!worker || !available.value || analyzing.value) {
+        return
+      }
+
+      analyzing.value = true
+      currentId++
+      cancelling.value = false
+      error.value = null
+      summary.value = undefined
+      rawResult.value = []
+
+      await new Promise(resolve => setTimeout(resolve, 256))
+
+      worker.postMessage({
+        type: 'analyze-cause',
+        id: currentId,
+        packageName,
+        fromVersion: comparedVersion.value,
+        toVersion: version.value,
+        ignoreOptional: false,
+      })
+    },
+    256,
+    false,
+    true,
+  )
+
+  cancelAnalyzeCause = useThrottleFn(
+    async () => {
+      if (!worker || !analyzing.value || cancelling.value) {
+        return
+      }
+
+      cancelling.value = true
+
+      await new Promise(resolve => setTimeout(resolve, 256))
+
+      worker.postMessage({
+        type: 'analyze-cause-abort',
+        id: currentId,
+      })
+    },
+    256,
+    false,
+    true,
+  )
+
+  async function handleWorkerMessage(event: MessageEvent<AnalyzeWorkerResponse>) {
+    const msg = event.data
+
+    if (msg.id !== currentId) {
+      return
+    }
+
+    switch (msg.type) {
+      case 'sessions':
+        break
+      case 'result':
+        await new Promise(resolve => setTimeout(resolve, 1_000))
+        rawResult.value = msg.result.map(
+          r =>
+            Object.assign(r, {
+              v1: r.v1 ? { ...r.v1, sizeText: bytesFormatter.format(r.v1.size) } : null,
+              v2: r.v2 ? { ...r.v2, sizeText: bytesFormatter.format(r.v2.size) } : null,
+              statusText: bytesFormatter.t(`package.size_increase.analyze.status.${r.status}`),
+              sizeDeltaText: bytesFormatter.format(r.sizeDelta),
+            }) as UIDiffResult,
+        )
+        summary.value = Object.assign(msg.summary, {
+          sizeDeltaText: bytesFormatter.format(msg.summary.sizeDelta),
+          sizeDeltaBytesText: rawBytesFormatter.value.format(msg.summary.sizeDelta),
+          mandatorySizeDeltaText: bytesFormatter.format(msg.summary.mandatorySizeDelta),
+          mandatorySizeDeltaBytesText: rawBytesFormatter.value.format(
+            msg.summary.mandatorySizeDelta,
+          ),
+          netDependenciesText: `${msg.summary.netDependencies > 0 ? '+' : ''}${rawBytesFormatter.value.format(msg.summary.netDependencies)}`,
+          addedText: rawBytesFormatter.value.format(msg.summary.added),
+          removedText: rawBytesFormatter.value.format(msg.summary.removed),
+        })
+        analyzing.value = false
+        cancelling.value = false
+        const totalDeltaMB = (msg.summary.sizeDelta / (1024 * 1024)).toFixed(2)
+        const jsDeltaMB = (msg.summary.mandatorySizeDelta / (1024 * 1024)).toFixed(2)
+
+        console.log(`📊 FINAL DIFF BALANCE:`)
+        console.log(
+          `📦 Size variation (Total): ${totalDeltaMB} MB (${msg.summary.sizeDelta} bytes)`,
+        )
+        console.log(
+          `🧠 Size variation (JS Core): ${jsDeltaMB} MB (${msg.summary.mandatorySizeDelta} bytes)`,
+        )
+        console.log(
+          `🧩 Dependency variation: ${msg.summary.netDependencies > 0 ? '+' : ''}${msg.summary.netDependencies} (Added: ${msg.summary.added}, Removed: ${msg.summary.removed})`,
+        )
+        break
+      case 'error':
+        error.value = msg.message
+        analyzing.value = false
+        cancelling.value = false
+        break
+      case 'aborting':
+        cancelling.value = true
+        break
+      case 'aborted':
+        analyzing.value = false
+        cancelling.value = false
+        break
+    }
+  }
+
+  onMounted(async () => {
+    try {
+      const module = await import('~/utils/pkg-size/analize-cause-client-worker')
+      worker = module.worker
+
+      worker.addEventListener('message', handleWorkerMessage)
+      available.value = true
+    } catch (err) {
+      // oxlint-disable-next-line no-console
+      console.error('cannot load worker', err)
+      available.value = false
+    } finally {
+      loading.value = false
+    }
+
+    watch(
+      [version, comparedVersion],
+      ([v1, v2]) => {
+        available.value = !!v1 && !!v2 && !!worker
+      },
+      { immediate: true, flush: 'post' },
+    )
+  })
+
+  onUnmounted(() => {
+    if (worker) {
+      worker.removeEventListener('message', handleWorkerMessage)
+    }
+  })
+
+  return {
+    available,
+    analyzing,
+    cancelling,
+    loading,
+    result,
+    noResultScroll,
+    allDependencies,
+    summary,
+    error,
+    startAnalyzeCause,
+    cancelAnalyzeCause,
+  }
+}
