@@ -101,10 +101,21 @@ export async function getNodeOAuthClient(): Promise<OAuthClient> {
 export async function loadJWKs(): Promise<ClientAssertionPrivateJwk[] | undefined> {
   // If we ever need to add multiple JWKs to rotate keys we will need to add a new one
   // under a new variable and update here
-  const jwkOne = useRuntimeConfig().oauthJwkOne
+  const raw = useRuntimeConfig().oauthJwkOne
+  if (!raw) return undefined
 
-  // nuxt auto parses the string as JSON, but we don't know that in the types
-  return jwkOne ? [jwkOne as unknown as ClientAssertionPrivateJwk] : undefined
+  const one =
+    typeof raw === 'string'
+      ? (JSON.parse(raw) as ClientAssertionPrivateJwk)
+      : // nuxt can auto parse the string as JSON depending
+        // on how the env var value is formatted
+        (raw as unknown as ClientAssertionPrivateJwk)
+
+  if (!one) {
+    throw new Error('failed to parse jwk from env var')
+  }
+
+  return [one]
 }
 
 async function getOAuthSession(event: H3Event): Promise<{
