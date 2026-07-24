@@ -4,7 +4,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { useBytesFormatter, useNumberFormatter } from '~/composables/useNumberFormatter'
 
 export function useAnalyzeCauseWorker(
-  packageName: string,
+  packageName: ComputedRef<string | undefined | null>,
   version: ComputedRef<string | undefined | null>,
   comparedVersion: ComputedRef<string | undefined | null>,
 ) {
@@ -70,7 +70,7 @@ export function useAnalyzeCauseWorker(
       worker.postMessage({
         type: 'analyze-cause',
         id: currentId,
-        packageName,
+        packageName: packageName.value,
         fromVersion: comparedVersion.value,
         toVersion: version.value,
         ignoreOptional: false,
@@ -180,9 +180,9 @@ export function useAnalyzeCauseWorker(
     }
 
     watch(
-      [version, comparedVersion],
-      ([v1, v2]) => {
-        available.value = !!v1 && !!v2 && !!worker
+      [packageName, version, comparedVersion],
+      ([pkg, v1, v2]) => {
+        available.value = !!pkg && !!v1 && !!v2 && !!worker
       },
       { immediate: true, flush: 'post' },
     )

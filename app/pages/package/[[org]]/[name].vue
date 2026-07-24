@@ -205,12 +205,7 @@ const {
 } = usePackage(packageName, () => resolvedVersion.value ?? requestedVersion.value)
 
 const { data: licenseChangeData } = useLicenseChanges(packageName, resolvedVersion)
-const { diff: sizeDiff, comparisonVersion } = useInstallSizeDiff(
-  packageName,
-  resolvedVersion,
-  pkg,
-  installSize,
-)
+const { diff: sizeDiff } = useInstallSizeDiff(packageName, resolvedVersion, pkg, installSize)
 const { versions: commandPaletteVersions, ensureLoaded: ensureCommandPaletteVersionsLoaded } =
   useCommandPalettePackageVersions(packageName)
 
@@ -930,7 +925,6 @@ const showSkeleton = shallowRef(false)
             :diff="sizeDiff"
             :package-name="packageName"
             :version="resolvedVersion"
-            :compared-version="comparisonVersion"
           />
           <!-- Size / dependency decrease celebration -->
           <PackageSizeDecrease v-else-if="sizeDiff?.direction === 'decrease'" :diff="sizeDiff" />

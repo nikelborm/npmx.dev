@@ -7,7 +7,6 @@ const props = defineProps<{
   diff: InstallSizeDiff
   packageName: string
   version?: string | null
-  comparedVersion?: string | null
 }>()
 
 const bytesFormatter = useBytesFormatter()
@@ -16,6 +15,9 @@ const percentFormatter = useNumberFormatter({ style: 'percent' })
 
 const sizePercent = computed(() => percentFormatter.value.format(Math.abs(props.diff.sizeRatio)))
 
+const usePackage = computed(() => {
+  return props.packageName
+})
 const useVersion = computed(() => {
   return props.version
 })
@@ -34,7 +36,7 @@ const {
   allDependencies,
   startAnalyzeCause,
   cancelAnalyzeCause,
-} = useAnalyzeCauseWorker(props.packageName, useVersion, useComparedVersion)
+} = useAnalyzeCauseWorker(usePackage, useVersion, useComparedVersion)
 </script>
 
 <template>
