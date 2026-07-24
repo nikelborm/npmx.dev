@@ -44,12 +44,12 @@
     "chromatic": "chromatic"
   },
   "dependencies": {
-    "@atcute/bluesky-richtext-segmenter": "3.0.1",
+    "@atcute/bluesky-richtext-segmenter": "3.0.2",
     "@atcute/identity-resolver": "2.0.1",
     "@atcute/identity-resolver-node": "2.0.1",
-    "@atcute/lexicons": "2.0.2",
+    "@atcute/lexicons": "2.0.3",
     "@atcute/oauth-node-client": "2.0.1",
-    "@atcute/tid": "1.1.3",
+    "@atcute/tid": "1.1.4",
     "@atproto/api": "0.20.25",
     "@atproto/lex": "0.1.7",
     "@atproto/lex-password-session": "0.1.4",
