@@ -93,20 +93,14 @@ async function fetchAndResolve(
   }
 }
 
-export async function resolveAndPersistGraph(
+/**
+ * Helper 1: Processes the BFS queue for dependencies and performs batch requests.
+ */
+async function processBfsQueue(
   packageName: string,
   targetVersion: string,
   abortController: AbortController,
-): Promise<string> {
-  const rootKey = `${packageName}@${targetVersion}`
-
-  const existingSession = await db.getSession(rootKey)
-  if (existingSession?.isFinished) {
-    return rootKey
-  }
-
-  await db.initSession(rootKey)
-
+) {
   const memoryGraph = new Map<string, string[]>()
   const packageSizes = new Map<string, number>()
   const visited = new Set<string>()
@@ -158,6 +152,13 @@ export async function resolveAndPersistGraph(
     }
   }
 
+  return { memoryGraph, packageSizes }
+}
+
+/**
+ * Helper 2: Computes mandatory dependencies via graph traversal.
+ */
+function computeMandatoryKeys(rootKey: string, memoryGraph: Map<string, string[]>): Set<string> {
   const mandatoryKeys = new Set<string>()
   const traverse = (key: string) => {
     if (mandatoryKeys.has(key)) return
@@ -166,6 +167,31 @@ export async function resolveAndPersistGraph(
     normalDeps.forEach(traverse)
   }
   traverse(rootKey)
+  return mandatoryKeys
+}
+
+export async function resolveAndPersistGraph(
+  packageName: string,
+  targetVersion: string,
+  abortController: AbortController,
+): Promise<string> {
+  const rootKey = `${packageName}@${targetVersion}`
+
+  const existingSession = await db.getSession(rootKey)
+  if (existingSession?.isFinished) {
+    return rootKey
+  }
+
+  await db.initSession(rootKey)
+
+  // Coordinate via specialized helpers to satisfy linter/CodeRabbit requirements
+  const { memoryGraph, packageSizes } = await processBfsQueue(
+    packageName,
+    targetVersion,
+    abortController,
+  )
+
+  const mandatoryKeys = computeMandatoryKeys(rootKey, memoryGraph)
 
   const resolvedPackageKeys: string[] = []
   const optionalPackageKeys: string[] = []
