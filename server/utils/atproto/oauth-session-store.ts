@@ -14,7 +14,7 @@ export class OAuthSessionStore implements SessionStore {
   }
 
   private createStorageKey(did: string) {
-    return `sessions:${did}`
+    return `sessions:v2:${did}`
   }
 
   async get(key: string): Promise<StoredSession | undefined> {
