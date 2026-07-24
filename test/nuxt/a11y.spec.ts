@@ -159,6 +159,8 @@ import {
   ButtonBase,
   LandingIntroHeader,
   NoodleArtemisLogo,
+  NoodleEmojiDayLogo,
+  NoodleEmojiDayThemedLogo,
   NoodleKawaiiLogo,
   NoodleTransgenderVisibilityLogo,
   NoodleListCard,
@@ -169,6 +171,8 @@ import {
   NoodleLens,
   NoodlePride3Logo,
   NoodleTetrisLogo,
+  NoodleGifDayLogo,
+  NoodleGifDayGifText,
   LinkBase,
   CallToAction,
   ChangelogCard,
@@ -245,6 +249,7 @@ import {
   SelectField,
   SettingsAccentColorPicker,
   SettingsBgThemePicker,
+  SettingsFgThemePicker,
   SettingsToggle,
   TagStatic,
   TagRadioButton,
@@ -413,6 +418,22 @@ describe('component accessibility audits', () => {
     })
 
     it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleEmojiDayLogo)
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleEmojiDayThemedLogo, {
+        props: {
+          emojiSets: {},
+        },
+      })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
       const component = await mountSuspended(NoodlePride1Logo)
       const results = await runAxe(component)
       expect(results.violations).toEqual([])
@@ -442,6 +463,23 @@ describe('component accessibility audits', () => {
           logo: NoodleKawaiiLogo,
         },
       })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleGifDayGifText, {
+        props: {
+          text: 'N',
+          backgroundUrl: 'some_image_here.gif',
+        },
+      })
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(NoodleGifDayLogo)
       const results = await runAxe(component)
       expect(results.violations).toEqual([])
     })
@@ -2774,6 +2812,14 @@ describe('component accessibility audits', () => {
     })
   })
 
+  describe('SettingsFgThemePicker', () => {
+    it('should have no accessibility violations', async () => {
+      const component = await mountSuspended(SettingsFgThemePicker)
+      const results = await runAxe(component)
+      expect(results.violations).toEqual([])
+    })
+  })
+
   describe('TooltipBase', () => {
     it('should have no accessibility violations when hidden', async () => {
       const component = await mountSuspended(TooltipBase, {
@@ -4621,6 +4667,10 @@ describe('background theme accessibility', () => {
     {
       name: 'SettingsBgThemePicker',
       mount: () => mountSuspended(SettingsBgThemePicker),
+    },
+    {
+      name: 'SettingsFgThemePicker',
+      mount: () => mountSuspended(SettingsFgThemePicker),
     },
     {
       name: 'ProvenanceBadge',
