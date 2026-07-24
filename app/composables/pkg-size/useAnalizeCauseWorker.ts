@@ -148,19 +148,6 @@ export function useAnalyzeCauseWorker(
         })
         analyzing.value = false
         cancelling.value = false
-        const totalDeltaMB = (msg.summary.sizeDelta / (1024 * 1024)).toFixed(2)
-        const jsDeltaMB = (msg.summary.mandatorySizeDelta / (1024 * 1024)).toFixed(2)
-
-        console.log(`📊 FINAL DIFF BALANCE:`)
-        console.log(
-          `📦 Size variation (Total): ${totalDeltaMB} MB (${msg.summary.sizeDelta} bytes)`,
-        )
-        console.log(
-          `🧠 Size variation (JS Core): ${jsDeltaMB} MB (${msg.summary.mandatorySizeDelta} bytes)`,
-        )
-        console.log(
-          `🧩 Dependency variation: ${msg.summary.netDependencies > 0 ? '+' : ''}${msg.summary.netDependencies} (Added: ${msg.summary.added}, Removed: ${msg.summary.removed})`,
-        )
         break
       case 'error':
         error.value = msg.message
