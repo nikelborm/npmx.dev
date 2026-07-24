@@ -110,7 +110,7 @@ const {
           <!-- SUMMARY -->
           <div class="border-t border-amber-600/20 pt-3 flex flex-col gap-1">
             <p class="text-xs text-amber-700 dark:text-amber-500 m-0">
-              📦
+              <span aria-hidden="true">📦</span>
               <i18n-t keypath="package.size_increase.analyze.summary.total_size" scope="global">
                 <template #size>{{ summary.sizeDeltaText }}</template>
                 <template #bytes>
@@ -123,7 +123,7 @@ const {
               </i18n-t>
             </p>
             <p class="text-xs text-amber-700 dark:text-amber-500 m-0">
-              🧠
+              <span aria-hidden="true">🧠</span>
               <i18n-t keypath="package.size_increase.analyze.summary.js_core_size" scope="global">
                 <template #size>{{ summary.mandatorySizeDeltaText }}</template>
                 <template #bytes>
@@ -136,7 +136,7 @@ const {
               </i18n-t>
             </p>
             <p class="text-xs text-amber-700 dark:text-amber-500 m-0">
-              🧩
+              <span aria-hidden="true">🧩</span>
               <i18n-t keypath="package.size_increase.analyze.summary.deps_variation" scope="global">
                 <template #net>{{
                   summary.netDependenciesText ||
