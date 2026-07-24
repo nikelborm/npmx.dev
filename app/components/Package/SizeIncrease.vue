@@ -309,7 +309,6 @@ const {
     opacity 0.25s ease-in-out;
   overflow: hidden;
   opacity: 1;
-  max-height: 800px; /* Altura máxima segura de despliegue para la transición */
 }
 
 .expand-enter-from,
