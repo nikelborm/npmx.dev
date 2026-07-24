@@ -17,24 +17,27 @@ function post(msg: AnalyzeWorkerResponse) {
 
 self.addEventListener('message', async (event: MessageEvent<AnalyzeCauseWorkerRequest>) => {
   const msg = event.data
+  const { id, type } = msg
 
-  if (msg.type === 'analyze-cause-abort') {
+  if (type === 'analyze-cause-abort') {
     if (abortController) {
       abortController.abort()
-      post({ type: 'aborting', id: msg.id })
+      post({ type: 'aborting', id })
     } else {
-      post({ type: 'aborted', id: msg.id })
+      post({ type: 'aborted', id })
     }
     return
   }
 
-  if (msg.type !== 'analyze-cause') {
+  if (type !== 'analyze-cause') {
     return
   }
 
-  const { id, packageName, fromVersion, toVersion, ignoreOptional = false } = msg
+  const { packageName, fromVersion, toVersion, ignoreOptional = false } = msg
 
-  abortController = new AbortController()
+  abortController?.abort()
+  const controller = new AbortController()
+  abortController = controller
 
   const keys = {
     fromVersion: `${packageName}@${fromVersion}`,
@@ -60,11 +63,11 @@ self.addEventListener('message', async (event: MessageEvent<AnalyzeCauseWorkerRe
     post({ type: 'sessions', id, fromVersion, toVersion })
 
     await Promise.all([
-      resolveAndPersistGraph(packageName, fromVersion, abortController),
-      resolveAndPersistGraph(packageName, toVersion, abortController),
+      resolveAndPersistGraph(packageName, fromVersion, controller),
+      resolveAndPersistGraph(packageName, toVersion, controller),
     ])
 
-    await checkAborted(abortController)
+    await checkAborted(controller)
 
     const [session1, session2] = await Promise.all([
       db.getSession(keys.fromVersion),
@@ -120,9 +123,7 @@ self.addEventListener('message', async (event: MessageEvent<AnalyzeCauseWorkerRe
           isOptional: p1.isOptional,
         })
       }
-
-      // Los saltos de versión (changed) y los unchanged se ignoran usando el "machete"
-      // que acordamos para limpiar el ruido del Diff.
+      // Version jumps (changed) and no-change entries are ignored
     }
 
     result.sort((a, b) => Math.abs(b.sizeDelta) - Math.abs(a.sizeDelta))
@@ -163,7 +164,7 @@ self.addEventListener('message', async (event: MessageEvent<AnalyzeCauseWorkerRe
       },
     })
   } catch (error) {
-    if (error instanceof AbortedError || abortController?.signal.aborted) {
+    if (error instanceof AbortedError || controller.signal.aborted) {
       post({ type: 'aborted', id })
     } else {
       post({ type: 'error', id, message: error instanceof Error ? error.message : String(error) })

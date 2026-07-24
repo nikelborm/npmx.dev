@@ -94,7 +94,7 @@ export interface UISummary extends Summary {
 export type AnalyzeCauseWorkerRequest =
   | {
       type: 'analyze-cause'
-      id: number
+      id: number | string
       packageName: string
       fromVersion: string
       toVersion: string
@@ -102,12 +102,12 @@ export type AnalyzeCauseWorkerRequest =
     }
   | {
       type: 'analyze-cause-abort'
-      id: number
+      id: number | string
     }
 
 export type AnalyzeWorkerResponse =
-  | { type: 'sessions'; id: number; fromVersion: string; toVersion: string }
-  | { type: 'result'; id: number; result: DiffResult[]; summary: Summary }
-  | { type: 'error'; id: number; message: string }
-  | { type: 'aborting'; id: number }
-  | { type: 'aborted'; id: number }
+  | { type: 'sessions'; id: number | string; fromVersion: string; toVersion: string }
+  | { type: 'result'; id: number | string; result: DiffResult[]; summary: Summary }
+  | { type: 'error'; id: number | string; message: string }
+  | { type: 'aborting'; id: number | string }
+  | { type: 'aborted'; id: number | string }

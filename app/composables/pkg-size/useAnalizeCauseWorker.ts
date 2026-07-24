@@ -47,7 +47,7 @@ export function useAnalyzeCauseWorker(
   }
 
   let worker: Worker | undefined
-  let currentId = 0
+  let currentId: number | string = 0
 
   const bytesFormatter = useBytesFormatter()
   const rawBytesFormatter = useNumberFormatter()
@@ -67,7 +67,12 @@ export function useAnalyzeCauseWorker(
       }
 
       analyzing.value = true
-      currentId++
+      currentId =
+        import.meta.test || import.meta.dev
+          ? (currentId as number)++
+          : import.meta.client
+            ? crypto.randomUUID()
+            : await import('node:crypto').then(({ randomUUID }) => randomUUID())
       cancelling.value = false
       error.value = null
       summary.value = undefined
