@@ -102,9 +102,9 @@ export async function loadJWKs(): Promise<ClientAssertionPrivateJwk[] | undefine
   // If we ever need to add multiple JWKs to rotate keys we will need to add a new one
   // under a new variable and update here
   const jwkOne = useRuntimeConfig().oauthJwkOne
-  if (!jwkOne) return undefined
 
-  return [JSON.parse(jwkOne) as ClientAssertionPrivateJwk]
+  // nuxt auto parses the string as JSON, but we don't know that in the types
+  return jwkOne ? [jwkOne as unknown as ClientAssertionPrivateJwk] : undefined
 }
 
 async function getOAuthSession(event: H3Event): Promise<{
