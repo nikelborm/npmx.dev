@@ -439,7 +439,8 @@
           "js_core_size": "Size variation (only dependencies): {size} {bytes}",
           "bytes": "({bytes} bytes)",
           "deps_variation": "Dependency variation: {net} ({details})",
-          "deps_details": "Added: {added}, Removed: {removed}"
+          "deps_details": "Added: {added}, Removed: {removed}",
+          "no_deps": "No dependencies found"
         },
         "diff": "Diff balance",
         "only_deps": "Only dependencies",

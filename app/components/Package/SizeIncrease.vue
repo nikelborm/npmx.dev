@@ -106,7 +106,7 @@ const {
       </div>
 
       <Transition name="expand">
-        <div v-if="summary && result && result.length > 0" class="flex flex-col">
+        <div v-if="summary" class="flex flex-col">
           <!-- SUMMARY -->
           <div class="border-t border-amber-600/20 pt-3 flex flex-col gap-1">
             <p class="text-xs text-amber-700 dark:text-amber-500 m-0">
@@ -212,7 +212,10 @@ const {
                 class="custom-scrollbar pe-1 transition-all duration-300"
                 :class="{ 'overflow-y-auto max-h-[216px]': !noResultScroll }"
               >
-                <ul class="flex flex-col gap-1.5 m-0 p-0 list-none pe-1">
+                <ul
+                  v-if="result && result.length > 0"
+                  class="flex flex-col gap-1.5 m-0 p-0 list-none pe-1"
+                >
                   <li
                     v-for="(item, index) in result"
                     :key="index"
@@ -294,6 +297,9 @@ const {
                     </div>
                   </li>
                 </ul>
+                <div v-else class="text-xs text-amber-700/80 dark:text-amber-500/80 py-1">
+                  {{ $t('package.size_increase.analyze.summary.no_deps') }}
+                </div>
               </div>
             </div>
           </details>

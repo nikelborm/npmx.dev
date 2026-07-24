@@ -431,7 +431,8 @@
           "js_core_size": "Variación de tamaño (solo dependencias): {size} {bytes}",
           "bytes": "({bytes} bytes)",
           "deps_variation": "Variación de dependencias: {net} ({details})",
-          "deps_details": "Añadidas: {added}, Eliminadas: {removed}"
+          "deps_details": "Añadidas: {added}, Eliminadas: {removed}",
+          "no_deps": "No se encontraron dependencias"
         },
         "diff": "Balance de diferencias",
         "only_deps": "Solo dependencias",
