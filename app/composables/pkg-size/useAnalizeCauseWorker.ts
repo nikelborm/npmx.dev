@@ -52,6 +52,14 @@ export function useAnalyzeCauseWorker(
   const bytesFormatter = useBytesFormatter()
   const rawBytesFormatter = useNumberFormatter()
 
+  watch(
+    [packageName, version, comparedVersion],
+    ([pkg, v1, v2]) => {
+      available.value = !!pkg && !!v1 && !!v2 && !!worker
+    },
+    { flush: 'post' },
+  )
+
   startAnalyzeCause = useThrottleFn(
     async () => {
       if (!worker || !available.value || analyzing.value) {
@@ -178,14 +186,6 @@ export function useAnalyzeCauseWorker(
     } finally {
       loading.value = false
     }
-
-    watch(
-      [packageName, version, comparedVersion],
-      ([pkg, v1, v2]) => {
-        available.value = !!pkg && !!v1 && !!v2 && !!worker
-      },
-      { immediate: true, flush: 'post' },
-    )
   })
 
   onUnmounted(() => {
