@@ -428,13 +428,13 @@
         "cancelling": "Cancelando...",
         "summary": {
           "total_size": "Variación de tamaño (total): {size} {bytes}",
-          "js_core_size": "Variación de tamaño (sólo dependencias): {size} {bytes}",
+          "js_core_size": "Variación de tamaño (solo dependencias): {size} {bytes}",
           "bytes": "({bytes} bytes)",
           "deps_variation": "Variación de dependencias: {net} ({details})",
           "deps_details": "Añadidas: {added}, Eliminadas: {removed}"
         },
         "diff": "Balance de diferencias",
-        "only_deps": "Sólo dependencias",
+        "only_deps": "Solo dependencias",
         "all_deps": "Todas las dependencias",
         "expand": "Expandir",
         "collapse": "Contraer",
