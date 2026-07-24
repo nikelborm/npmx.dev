@@ -53,6 +53,8 @@ export async function getNodeOAuthClient(): Promise<OAuthClient> {
   const requestLock = getOAuthLock()
   const redirectUri = new URL('/api/auth/atproto', clientUri).toString()
 
+  console.log('__debug', clientUri, Array.isArray(keyset) ? keyset.length : !!keyset)
+
   const actorResolver = new LocalActorResolver({
     handleResolver: new CompositeHandleResolver({
       strategy: 'race',
