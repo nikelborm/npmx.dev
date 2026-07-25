@@ -64,6 +64,8 @@ export function useAnalyzeCauseWorker(
     error.value = event instanceof ErrorEvent ? event.message : 'worker failure'
     analyzing.value = false
     cancelling.value = false
+    // oxlint-disable-next-line no-console
+    console.error('Worker failure:', event)
   }
 
   startAnalyzeCause = useThrottleFn(
@@ -159,6 +161,8 @@ export function useAnalyzeCauseWorker(
         error.value = msg.message
         analyzing.value = false
         cancelling.value = false
+        // oxlint-disable-next-line no-console
+        console.error('Worker failure:', msg)
         break
       case 'aborting':
         cancelling.value = true
