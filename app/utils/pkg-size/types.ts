@@ -69,7 +69,7 @@ export interface UIDiffResult extends Omit<DiffResult, 'v1' | 'v2'> {
   sizeDeltaText: string
 }
 
-export interface Summary {
+interface Summary {
   sizeDelta: number
   mandatorySizeDelta: number
   netDependencies: number
