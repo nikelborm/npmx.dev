@@ -57,6 +57,7 @@ export const theme = {
     provider: {
       stackblitz: '#1389FD',
       codesandbox: '#FFCC00',
+      effect: '#000000',
       codepen: '#47CF73',
       replit: '#F26207',
       gitpod: '#FFAE33',
