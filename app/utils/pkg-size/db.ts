@@ -39,7 +39,7 @@ class NpmxPkgSizeDB extends Dexie {
 
     const finishedSessions = await this.sessions
       .where('isFinished')
-      .equals(1) // In IndexedDB, boolean values are stored as 0/1
+      .equals(1) // In IndexedDB, boolean values (false/true) are stored as 0/1
       .sortBy('timestamp')
 
     const count = finishedSessions.length
@@ -50,6 +50,14 @@ class NpmxPkgSizeDB extends Dexie {
 
       await this.sessions.bulkDelete(keysToDelete)
     }
+  }
+
+  async dropDatabase(): Promise<void> {
+    if (this.isOpen()) {
+      this.close()
+    }
+    await this.delete()
+    await this.open()
   }
 
   async getSession(id: string): Promise<AnalysisSessionEntity | undefined> {
