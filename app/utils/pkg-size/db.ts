@@ -18,12 +18,10 @@ class NpmxPkgSizeDB extends Dexie {
       autoOpen: false,
     })
 
-    // Esquema definitivo. Al estar la feature en preview,
-    // empezamos limpios desde la versión 1 sin migraciones heredadas.
     this.version(1).stores({
       packages: 'id, name',
       edges: '[parentKey+childName], parentKey, resolvedVersionKey',
-      sessions: 'rootKey, timestamp',
+      sessions: 'rootKey, timestamp, isFinished',
     })
 
     this.packages = this.table('packages')
