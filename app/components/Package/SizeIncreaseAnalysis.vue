@@ -183,8 +183,8 @@ const {
                   class="flex flex-col gap-1.5 m-0 p-0 list-none pe-1"
                 >
                   <li
-                    v-for="(item, index) in result"
-                    :key="index"
+                    v-for="item in result"
+                    :key="item.name"
                     class="flex flex-wrap items-center justify-between gap-2 py-1.5 px-2 rounded-md bg-amber-500/5 hover:bg-amber-500/10 transition-colors border border-amber-600/10"
                   >
                     <div class="flex items-center gap-2.5">
