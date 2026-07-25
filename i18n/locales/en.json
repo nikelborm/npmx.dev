@@ -448,8 +448,6 @@
         "all_deps": "All dependencies",
         "expand": "Expand",
         "collapse": "Collapse",
-        "added": "Added",
-        "removed": "Removed",
         "status": {
           "added": "Added",
           "changed": "Changed",

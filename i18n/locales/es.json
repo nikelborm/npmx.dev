@@ -440,8 +440,6 @@
         "all_deps": "Todas las dependencias",
         "expand": "Expandir",
         "collapse": "Contraer",
-        "added": "Añadidas",
-        "removed": "Eliminadas",
         "status": {
           "added": "Añadida",
           "changed": "Modificada",

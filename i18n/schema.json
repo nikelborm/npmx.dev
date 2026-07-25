@@ -1348,12 +1348,6 @@
                 "collapse": {
                   "type": "string"
                 },
-                "added": {
-                  "type": "string"
-                },
-                "removed": {
-                  "type": "string"
-                },
                 "status": {
                   "type": "object",
                   "properties": {
