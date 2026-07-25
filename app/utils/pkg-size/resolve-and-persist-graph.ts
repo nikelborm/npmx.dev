@@ -135,7 +135,7 @@ async function processBfsQueue(
         visited.add(pkgKey)
         packageSizes.set(pkgKey, pkgData.dist?.unpackedSize || 0)
 
-        await db.storePackage(pkgKey, pkgData, item.parentKey, item.range, item.isOptional)
+        await db.upsertPackage(pkgKey, pkgData)
 
         for (const [depName, depRange] of Object.entries(pkgData.dependencies || {})) {
           queue.push({ name: depName, range: depRange, parentKey: pkgKey, isOptional: false })
@@ -143,13 +143,23 @@ async function processBfsQueue(
         for (const [depName, depRange] of Object.entries(pkgData.optionalDependencies || {})) {
           queue.push({ name: depName, range: depRange, parentKey: pkgKey, isOptional: true })
         }
-      } else {
-        await db.storePackage(pkgKey, pkgData, item.parentKey, item.range, item.isOptional)
       }
 
-      if (item.parentKey && !item.isOptional) {
-        if (!memoryGraph.has(item.parentKey)) memoryGraph.set(item.parentKey, [])
-        memoryGraph.get(item.parentKey)!.push(pkgKey)
+      if (item.parentKey) {
+        await db.addDependencyEdge(
+          item.parentKey,
+          pkgData.name,
+          pkgKey,
+          item.range,
+          item.isOptional,
+        )
+
+        if (!item.isOptional) {
+          if (!memoryGraph.has(item.parentKey)) {
+            memoryGraph.set(item.parentKey, [])
+          }
+          memoryGraph.get(item.parentKey)!.push(pkgKey)
+        }
       }
     }
   }

@@ -100,34 +100,29 @@ class NpmxPkgSizeDB extends Dexie {
     })
   }
 
-  async storePackage(
-    pkgKey: string,
-    pkgData: PackageData,
-    parentKey?: string,
-    childRange?: string,
-    isOptional: boolean = false,
-  ): Promise<void> {
-    if (!this.isOpen()) {
-      await this.open()
-    }
-    await this.transaction('rw', this.packages, this.dependencyEdges, async () => {
-      await this.packages.put({
-        id: pkgKey,
-        name: pkgData.name,
-        version: pkgData.version,
-        unpackedSize: pkgData.dist?.unpackedSize || 0,
-        tarball: pkgData.dist?.tarball || '',
-      })
+  async upsertPackage(pkgKey: string, pkgData: PackageData) {
+    await this.packages.put({
+      id: pkgKey,
+      name: pkgData.name,
+      version: pkgData.version,
+      unpackedSize: pkgData.dist?.unpackedSize || 0,
+      tarball: pkgData.dist?.tarball || '',
+    })
+  }
 
-      if (parentKey && childRange) {
-        await this.dependencyEdges.add({
-          parentKey,
-          childName: pkgData.name,
-          resolvedVersionKey: pkgKey,
-          childRange,
-          isOptional,
-        })
-      }
+  async addDependencyEdge(
+    parentKey: string,
+    childName: string,
+    resolvedVersionKey: string,
+    childRange: string,
+    isOptional: boolean,
+  ) {
+    await this.dependencyEdges.add({
+      parentKey,
+      childName,
+      childRange,
+      resolvedVersionKey,
+      isOptional,
     })
   }
 }
