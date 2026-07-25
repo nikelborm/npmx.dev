@@ -18,17 +18,10 @@ class NpmxPkgSizeDB extends Dexie {
       autoOpen: false,
     })
 
-    // Version 1 (Legacy schema)
+    // Esquema definitivo. Al estar la feature en preview,
+    // empezamos limpios desde la versión 1 sin migraciones heredadas.
     this.version(1).stores({
       packages: 'id, name',
-      dependencyEdges: '++id, parentKey, resolvedVersionKey',
-      sessions: 'rootKey',
-    })
-
-    // Version 2: Added timestamp index & NEW edges table with composite PK
-    this.version(2).stores({
-      packages: 'id, name',
-      dependencyEdges: null,
       edges: '[parentKey+childName], parentKey, resolvedVersionKey',
       sessions: 'rootKey, timestamp',
     })
