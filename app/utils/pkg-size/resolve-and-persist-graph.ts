@@ -87,8 +87,10 @@ async function fetchAndResolve(
 
     return pkgData
   } catch (error) {
-    // oxlint-disable-next-line no-console
-    console.error(`[Error] Failed resolving ${name}@${range}:`, error)
+    if (!abortController.signal.aborted) {
+      // oxlint-disable-next-line no-console
+      console.error(`[Error] Failed resolving ${name}@${range}:`, error)
+    }
     return undefined
   }
 }
