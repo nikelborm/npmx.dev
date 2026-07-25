@@ -22,31 +22,13 @@ export const useBytesFormatter = () => {
   return {
     t,
     format: (bytes: number) => {
-      if (bytes >= 0) {
-        if (bytes < KB) {
-          return t('package.size.b', {
-            size: decimalNumberFormatter.value.format(bytes),
-          })
-        }
-        if (bytes < MB) {
-          return t('package.size.kb', {
-            size: decimalNumberFormatter.value.format(bytes / KB),
-          })
-        }
-
-        return t('package.size.mb', {
-          size: decimalNumberFormatter.value.format(bytes / MB),
-        })
-      }
-
-      const v = Math.abs(bytes)
-
-      if (v < KB) {
+      const magnitude = Math.abs(bytes)
+      if (magnitude < KB) {
         return t('package.size.b', {
           size: decimalNumberFormatter.value.format(bytes),
         })
       }
-      if (v < MB) {
+      if (magnitude < MB) {
         return t('package.size.kb', {
           size: decimalNumberFormatter.value.format(bytes / KB),
         })
