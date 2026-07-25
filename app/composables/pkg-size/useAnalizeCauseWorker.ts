@@ -60,6 +60,12 @@ export function useAnalyzeCauseWorker(
     { flush: 'post' },
   )
 
+  function handleWorkerFailure(event: Event) {
+    error.value = event instanceof ErrorEvent ? event.message : 'worker failure'
+    analyzing.value = false
+    cancelling.value = false
+  }
+
   startAnalyzeCause = useThrottleFn(
     async () => {
       if (!worker || !available.value || analyzing.value) {
@@ -170,6 +176,8 @@ export function useAnalyzeCauseWorker(
       worker = module.worker
 
       worker.addEventListener('message', handleWorkerMessage)
+      worker.addEventListener('error', handleWorkerFailure)
+      worker.addEventListener('messageerror', handleWorkerFailure)
       available.value = true
     } catch (err) {
       // oxlint-disable-next-line no-console
@@ -183,6 +191,8 @@ export function useAnalyzeCauseWorker(
   onUnmounted(() => {
     if (worker) {
       worker.removeEventListener('message', handleWorkerMessage)
+      worker.removeEventListener('error', handleWorkerFailure)
+      worker.removeEventListener('messageerror', handleWorkerFailure)
     }
   })
 
