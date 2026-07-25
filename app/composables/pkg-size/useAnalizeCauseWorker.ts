@@ -54,9 +54,9 @@ export function useAnalyzeCauseWorker(
   const rawBytesFormatter = useNumberFormatter()
 
   watch(
-    [packageName, version, comparedVersion],
-    ([pkg, v1, v2]) => {
-      available.value = !!pkg && !!v1 && !!v2 && !!worker
+    [loading, packageName, version, comparedVersion],
+    ([l, pkg, v1, v2]) => {
+      available.value = !l && !!pkg && !!v1 && !!v2 && !!worker
     },
     { flush: 'post' },
   )
@@ -183,11 +183,9 @@ export function useAnalyzeCauseWorker(
       worker.addEventListener('message', handleWorkerMessage)
       worker.addEventListener('error', handleWorkerFailure)
       worker.addEventListener('messageerror', handleWorkerFailure)
-      available.value = true
     } catch (err) {
       // oxlint-disable-next-line no-console
       console.error('cannot load worker', err)
-      available.value = false
     } finally {
       loading.value = false
     }
