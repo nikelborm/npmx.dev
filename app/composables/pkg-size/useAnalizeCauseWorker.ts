@@ -1,5 +1,10 @@
 import type { ComputedRef } from 'vue'
-import type { AnalyzeWorkerResponse, UIDiffResult, UISummary } from '~/utils/pkg-size/types'
+import type {
+  AnalyzeWorkerResponse,
+  DiffResult,
+  UIDiffResult,
+  UISummary,
+} from '~/utils/pkg-size/types'
 import { shallowRef, onMounted, onUnmounted } from 'vue'
 import { useThrottleFn } from '@vueuse/core'
 import { useBytesFormatter, useNumberFormatter } from '~/composables/useNumberFormatter'
@@ -123,6 +128,21 @@ export function useAnalyzeCauseWorker(
     true,
   )
 
+  function getDiffResultStatusText(diffResult: DiffResult): string {
+    switch (diffResult.status) {
+      case 'added':
+        return bytesFormatter.t('package.size_increase.analyze.status.added')
+      case 'changed':
+        return bytesFormatter.t('package.size_increase.analyze.status.changed')
+      case 'removed':
+        return bytesFormatter.t('package.size_increase.analyze.status.removed')
+      case 'unchanged':
+        return bytesFormatter.t('package.size_increase.analyze.status.unchanged')
+    }
+
+    return diffResult.status
+  }
+
   async function handleWorkerMessage(event: MessageEvent<AnalyzeWorkerResponse>) {
     const msg = event.data
 
@@ -140,7 +160,7 @@ export function useAnalyzeCauseWorker(
             Object.assign(r, {
               v1: r.v1 ? { ...r.v1, sizeText: bytesFormatter.format(r.v1.size) } : null,
               v2: r.v2 ? { ...r.v2, sizeText: bytesFormatter.format(r.v2.size) } : null,
-              statusText: bytesFormatter.t(`package.size_increase.analyze.status.${r.status}`),
+              statusText: getDiffResultStatusText(r),
               sizeDeltaText: bytesFormatter.format(r.sizeDelta),
             }) as UIDiffResult,
         )
