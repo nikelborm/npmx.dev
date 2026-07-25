@@ -65,7 +65,7 @@ const {
       <div v-if="summary || error" class="mt-3 border-t border-amber-600/20 pt-3 flex flex-col">
         <div
           v-if="error"
-          class="border border-rose-500/20 bg-rose-500/10 rounded-md px-3 py-2.5 flex items-center gap-2"
+          class="border border-rose-500/20 bg-rose-500/10 rounded-md px-3 py-2.5 flex items-start gap-2"
         >
           <span
             class="i-lucide:alert-circle w-4 h-4 shrink-0 text-rose-700 dark:text-rose-400 mt-0.5"
@@ -77,6 +77,9 @@ const {
             >
               {{ $t('package.size_increase.analyze.error') }}
             </span>
+            <p class="text-xs text-rose-700 dark:text-rose-300 m-0 break-words">
+              {{ error }}
+            </p>
           </div>
         </div>
         <template v-else-if="summary">
