@@ -63,8 +63,8 @@ export interface DiffResult {
 }
 
 export interface UIDiffResult extends Omit<DiffResult, 'v1' | 'v2'> {
-  v1: { version: string; size: string; sizeText: string } | null
-  v2: { version: string; size: string; sizeText: string } | null
+  v1: { version: string; size: number; sizeText: string } | null
+  v2: { version: string; size: number; sizeText: string } | null
   statusText: string
   sizeDeltaText: string
 }
