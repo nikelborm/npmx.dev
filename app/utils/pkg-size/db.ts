@@ -37,10 +37,7 @@ class NpmxPkgSizeDB extends Dexie {
       await this.open()
     }
 
-    const finishedSessions = await this.sessions
-      .where('isFinished')
-      .equals(1) // In IndexedDB, boolean values (false/true) are stored as 0/1
-      .sortBy('timestamp')
+    const finishedSessions = await this.sessions.where('isFinished').equals(1).sortBy('timestamp')
 
     const count = finishedSessions.length
     if (count > MAX_SESSIONS) {
