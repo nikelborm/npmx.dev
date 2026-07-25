@@ -10,6 +10,7 @@ import { db } from '~/utils/pkg-size/db'
 import { resolveAndPersistGraph } from '~/utils/pkg-size/resolve-and-persist-graph'
 
 let abortController: AbortController | undefined
+let inFlightId: number | string | undefined
 
 function post(msg: AnalyzeWorkerResponse) {
   ;(self as unknown as Worker).postMessage(msg)
@@ -20,7 +21,7 @@ self.addEventListener('message', async (event: MessageEvent<AnalyzeCauseWorkerRe
   const { id, type } = msg
 
   if (type === 'analyze-cause-abort') {
-    if (abortController) {
+    if (abortController && inFlightId === id) {
       abortController.abort()
       post({ type: 'aborting', id })
     } else {
@@ -38,6 +39,7 @@ self.addEventListener('message', async (event: MessageEvent<AnalyzeCauseWorkerRe
   abortController?.abort()
   const controller = new AbortController()
   abortController = controller
+  inFlightId = id
 
   const keys = {
     fromVersion: `${packageName}@${fromVersion}`,
@@ -168,6 +170,11 @@ self.addEventListener('message', async (event: MessageEvent<AnalyzeCauseWorkerRe
       post({ type: 'aborted', id })
     } else {
       post({ type: 'error', id, message: error instanceof Error ? error.message : String(error) })
+    }
+  } finally {
+    if (abortController === controller) {
+      abortController = undefined
+      inFlightId = undefined
     }
   }
 })
