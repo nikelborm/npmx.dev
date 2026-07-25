@@ -4,7 +4,7 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   diff: InstallSizeDiff
-  packageName: string
+  packageName?: string | null
   version?: string | null
 }>()
 
