@@ -286,6 +286,7 @@ const {
     border-color 0.4s ease-in-out;
   overflow: hidden;
   opacity: 1;
+  /* Upper bound for the expand animation; content taller than this is clipped mid-transition. */
   max-height: 500px;
 }
 
