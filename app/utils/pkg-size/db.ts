@@ -39,15 +39,17 @@ class NpmxPkgSizeDB extends Dexie {
       await this.open()
     }
 
-    const count = await this.sessions.count()
+    const finishedSessions = await this.sessions
+      .where('isFinished')
+      .equals(1) // In IndexedDB, boolean values are stored as 0/1
+      .sortBy('timestamp')
 
+    const count = finishedSessions.length
     if (count > MAX_SESSIONS) {
-      const oldSessions = await this.sessions
-        .orderBy('timestamp')
-        .limit(count - MAX_SESSIONS)
-        .toArray()
+      const excessCount = count - MAX_SESSIONS
+      const sessionsToDelete = finishedSessions.slice(0, excessCount)
+      const keysToDelete = sessionsToDelete.map(s => s.rootKey)
 
-      const keysToDelete = oldSessions.map(s => s.rootKey)
       await this.sessions.bulkDelete(keysToDelete)
     }
   }
