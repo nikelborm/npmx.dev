@@ -76,7 +76,7 @@ const {
         <button
           type="button"
           :disabled="!available || cancelling"
-          class="border border-amber-600/40 bg-amber-500/10 hover:bg-amber-500/20 rounded-md inline-flex items-center gap-1.5 text-xs font-medium text-amber-900 dark:text-amber-300 px-3 py-1.5 transition-all duration-200 ease-out focus-visible:outline-amber-600 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+          class="border border-amber-600/40 bg-amber-500/10 hover:bg-amber-500/20 rounded-md inline-flex items-center gap-1.5 text-xs font-medium text-amber-900 dark:text-amber-300 px-3 py-1.5 transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
           @click="analyzing ? cancelAnalyzeCause() : startAnalyzeCause()"
         >
           <span class="inline-flex items-center gap-1.5">
@@ -160,7 +160,7 @@ const {
           <!-- DIFF BALANCE -->
           <details class="group border-t border-amber-600/20 mt-3 pt-3 pb-1">
             <summary
-              class="flex items-center gap-2 cursor-pointer text-sm font-medium text-amber-900 dark:text-amber-400 select-none hover:text-amber-700 dark:hover:text-amber-200 focus-visible:outline-amber-600 rounded transition-colors duration-150"
+              class="flex items-center gap-2 cursor-pointer text-sm font-medium text-amber-900 dark:text-amber-400 select-none hover:text-amber-700 dark:hover:text-amber-200 rounded transition-colors duration-150"
             >
               <span
                 class="i-lucide:chevron-right icon-rtl w-4 h-4 shrink-0 transition-transform duration-200 group-open:rotate-90 rtl:group-open:-rotate-90"
@@ -176,7 +176,7 @@ const {
                 <button
                   type="button"
                   @click="allDependencies = !allDependencies"
-                  class="inline-flex items-center gap-1 text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-300 bg-amber-500/5 hover:bg-amber-500/15 border border-amber-600/20 px-2 py-1 rounded transition-colors focus-visible:outline-amber-600"
+                  class="inline-flex items-center gap-1 text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-300 bg-amber-500/5 hover:bg-amber-500/15 border border-amber-600/20 px-2 py-1 rounded transition-colors"
                 >
                   <span
                     :class="allDependencies ? 'i-lucide:list-filter' : 'i-lucide:list-tree'"
@@ -193,7 +193,7 @@ const {
                 <button
                   type="button"
                   @click="noResultScroll = !noResultScroll"
-                  class="inline-flex items-center gap-1 text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-300 bg-amber-500/5 hover:bg-amber-500/15 border border-amber-600/20 px-2 py-1 rounded transition-colors focus-visible:outline-amber-600"
+                  class="inline-flex items-center gap-1 text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-300 bg-amber-500/5 hover:bg-amber-500/15 border border-amber-600/20 px-2 py-1 rounded transition-colors"
                 >
                   <span
                     :class="noResultScroll ? 'i-lucide:minimize-2' : 'i-lucide:maximize-2'"
