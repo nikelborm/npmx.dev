@@ -1,12 +1,13 @@
+import type { ComputedRef } from 'vue'
 import type { AnalyzeWorkerResponse, UIDiffResult, UISummary } from '~/utils/pkg-size/types'
-import { shallowRef, onMounted, onUnmounted, type ModelRef } from 'vue'
+import { shallowRef, onMounted, onUnmounted } from 'vue'
 import { useThrottleFn } from '@vueuse/core'
 import { useBytesFormatter, useNumberFormatter } from '~/composables/useNumberFormatter'
 
 export function useAnalyzeCauseWorker(
-  packageName: ModelRef<string | undefined | null>,
-  version: ModelRef<string | undefined | null>,
-  comparedVersion: ModelRef<string | undefined | null>,
+  packageName: ComputedRef<string | undefined | null>,
+  version: ComputedRef<string | undefined | null>,
+  comparedVersion: ComputedRef<string | undefined | null>,
 ) {
   const analyzing = shallowRef(false)
   const available = shallowRef(false)

@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { useAnalyzeCauseWorker } from '~/composables/pkg-size/useAnalizeCauseWorker'
 
-const packageName = defineModel<string | null | undefined>('packageName')
-const version = defineModel<string | null | undefined>('version')
-const comparisonVersion = defineModel<string | null | undefined>('comparisonVersion')
+const props = defineProps<{
+  packageName?: string | null
+  version?: string | null
+  comparisonVersion?: string | null
+}>()
+
+const usePackage = computed(() => props.packageName)
+const useVersion = computed(() => props.version)
+const useComparedVersion = computed(() => props.comparisonVersion)
 
 const {
   available,
@@ -17,7 +23,7 @@ const {
   allDependencies,
   startAnalyzeCause,
   cancelAnalyzeCause,
-} = useAnalyzeCauseWorker(packageName, version, comparisonVersion)
+} = useAnalyzeCauseWorker(usePackage, useVersion, useComparedVersion)
 </script>
 
 <template>
