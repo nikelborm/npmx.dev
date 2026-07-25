@@ -434,6 +434,7 @@
         "analyze": "Analyze",
         "cancel": "Cancel",
         "cancelling": "Cancelling...",
+        "error": "Analysis failed, check the console for details.",
         "summary": {
           "total_size": "Size variation (total): {size} {bytes}",
           "js_core_size": "Size variation (only dependencies): {size} {bytes}",

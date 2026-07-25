@@ -25,7 +25,7 @@ export function useAnalyzeCauseWorker(
     return raw.filter(v => !v.isOptional)
   })
   const summary = shallowRef<UISummary | undefined>()
-  const error = shallowRef<string | null>(null)
+  const error = shallowRef<string | undefined>()
 
   let startAnalyzeCause: () => void = () => {}
   let cancelAnalyzeCause: () => void = () => {}
@@ -80,7 +80,7 @@ export function useAnalyzeCauseWorker(
             ? crypto.randomUUID()
             : await import('node:crypto').then(({ randomUUID }) => randomUUID())
       cancelling.value = false
-      error.value = null
+      error.value = undefined
       summary.value = undefined
       rawResult.value = []
 

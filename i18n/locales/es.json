@@ -426,6 +426,7 @@
         "analyze": "Analizar",
         "cancel": "Cancelar",
         "cancelling": "Cancelando...",
+        "error": "El análisis falló, revisa la consola para más detalles.",
         "summary": {
           "total_size": "Variación de tamaño (total): {size} {bytes}",
           "js_core_size": "Variación de tamaño (solo dependencias): {size} {bytes}",

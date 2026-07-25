@@ -1306,6 +1306,9 @@
                 "cancelling": {
                   "type": "string"
                 },
+                "error": {
+                  "type": "string"
+                },
                 "summary": {
                   "type": "object",
                   "properties": {
@@ -1322,6 +1325,9 @@
                       "type": "string"
                     },
                     "deps_details": {
+                      "type": "string"
+                    },
+                    "no_deps": {
                       "type": "string"
                     }
                   },
