@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAnalyzeCauseWorker } from '~/composables/pkg-size/useAnalizeCauseWorker'
+import { useAnalyzeCauseWorker } from '~/composables/pkg-size/useAnalyzeCauseWorker'
 
 const props = defineProps<{
   packageName?: string | null

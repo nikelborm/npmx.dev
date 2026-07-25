@@ -197,7 +197,7 @@ export function useAnalyzeCauseWorker(
 
   onMounted(async () => {
     try {
-      const module = await import('~/utils/pkg-size/analize-cause-client-worker')
+      const module = await import('~/utils/pkg-size/analyze-cause-client-worker')
       worker = module.worker
 
       worker.addEventListener('message', handleWorkerMessage)
