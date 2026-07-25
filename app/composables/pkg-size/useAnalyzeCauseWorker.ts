@@ -219,6 +219,10 @@ export function useAnalyzeCauseWorker(
 
   onUnmounted(() => {
     if (worker) {
+      // send abort first, then remove listeners: the aborting message won't be received here (fire and forgot)
+      if (analyzing.value) {
+        worker.postMessage({ type: 'analyze-cause-abort', id: currentId })
+      }
       worker.removeEventListener('message', handleWorkerMessage)
       worker.removeEventListener('error', handleWorkerFailure)
       worker.removeEventListener('messageerror', handleWorkerFailure)
