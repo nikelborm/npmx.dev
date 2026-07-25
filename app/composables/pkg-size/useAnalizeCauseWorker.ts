@@ -186,6 +186,12 @@ export function useAnalyzeCauseWorker(
     } catch (err) {
       // oxlint-disable-next-line no-console
       console.error('cannot load worker', err)
+      error.value =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String(err.message)
+            : String(err)
     } finally {
       loading.value = false
     }
